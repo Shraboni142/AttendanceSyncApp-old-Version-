@@ -37,7 +37,6 @@ namespace AttendanceSyncApp.Controllers
             return View(employees);
         }
         [HttpPost]
-
         public ActionResult GenerateReport(EmployeeJobCardReportFilterDto model)
         {
             var header = _service.GetHeaderData(
