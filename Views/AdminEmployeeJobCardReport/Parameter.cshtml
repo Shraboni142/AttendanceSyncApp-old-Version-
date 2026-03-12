@@ -1,0 +1,53 @@
+﻿@model List<AttendanceSyncApp.Models.DTOs.Reports.EmployeeDropdownDto>
+
+<h2>Employee Job Card</h2>
+
+<form method="post" action="/AdminEmployeeJobCardReport/GenerateReport">
+    <input type="hidden" name="ServerId" value="@ViewBag.ServerId" />
+    <input type="hidden" name="DatabaseName" value="@ViewBag.DatabaseName" />
+
+    <div style="margin-bottom:10px;">
+        <label>From Date</label><br />
+        <input type="date" name="FromDate" required />
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>To Date</label><br />
+        <input type="date" name="ToDate" required />
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Branch</label><br />
+        <select disabled>
+            <option>--Select--</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <label>Status</label><br />
+        <select disabled>
+            <option>Active</option>
+        </select>
+    </div>
+
+    <!-- DEBUG: Model এ কয়টা employee এসেছে দেখাবে -->
+    <p>Total Employee: @(Model == null ? 0 : Model.Count)</p>
+
+    <div style="margin-bottom:10px;">
+        <label>Employee</label><br />
+        <select name="EmployeeId" required>
+            <option value="">--- Select ---</option>
+
+            @if (Model != null)
+            {
+                foreach (var item in Model)
+                {
+                    <option value="@item.Id">@item.DisplayText</option>
+                }
+            }
+
+        </select>
+    </div>
+
+    <button type="submit">Generate Report</button>
+</form>

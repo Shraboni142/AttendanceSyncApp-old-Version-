@@ -176,7 +176,9 @@
     <Compile Include="Controllers\AdminDashboardController.cs" />
     <Compile Include="Controllers\AdminDatabaseAssignmentsController.cs" />
     <Compile Include="Controllers\AdminDatabaseConfigurationsController.cs" />
+    <Compile Include="Controllers\AdminEmployeeJobCardReportController.cs" />
     <Compile Include="Controllers\AdminEmployeesController.cs" />
+    <Compile Include="Controllers\AdminEmployeeStatusReportController.cs" />
     <Compile Include="Controllers\AdminRequestsController.cs" />
     <Compile Include="Controllers\AdminSessionsController.cs" />
     <Compile Include="Controllers\AdminToolsController.cs" />
@@ -264,6 +266,13 @@
     <Compile Include="Models\DTOs\BranchIssue\BranchIssueDtos.cs" />
     <Compile Include="Models\DTOs\ConcurrentSimulation\ConcurrentSimulationDtos.cs" />
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardDetailDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardHeaderDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardReportFilterDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardSummaryDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeStatusReportFilterDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeStatusReportRowDto.cs" />
     <Compile Include="Models\DTOs\SalaryGarbge\DatabaseAccessDto.cs" />
     <Compile Include="Models\DTOs\SalaryGarbge\GarbageDataDto.cs" />
     <Compile Include="Models\DTOs\SalaryGarbge\ServerIpDto.cs" />
@@ -342,6 +351,8 @@
     <Compile Include="Repositories\Sync\ToolRepository.cs" />
     <Compile Include="Repositories\Sync\CompanyRequestRepository.cs" />
     <Compile Include="Repositories\UnitOfWork.cs" />
+    <Compile Include="Services\AdminEmployeeJobCardReportService.cs" />
+    <Compile Include="Services\AdminEmployeeStatusReportService.cs" />
     <Compile Include="Services\Admin\AdminDatabaseAssignmentService.cs" />
     <Compile Include="Services\Admin\AdminDatabaseConfigService.cs" />
     <Compile Include="Services\Admin\AdminRequestService.cs" />
@@ -381,6 +392,8 @@
     <Compile Include="Services\Interfaces\Auth\ISessionService.cs" />
     <Compile Include="Services\Interfaces\BranchIssue\IBranchIssueService.cs" />
     <Compile Include="Services\Interfaces\ConcurrentSimulation\IConcurrentSimulationService.cs" />
+    <Compile Include="Services\Interfaces\IAdminEmployeeJobCardReportService.cs" />
+    <Compile Include="Services\Interfaces\IAdminEmployeeStatusReportService.cs" />
     <Compile Include="Services\Interfaces\ICompanyService.cs" />
     <Compile Include="Services\Interfaces\SalaryGarbge\IDatabaseAccessService.cs" />
     <Compile Include="Services\Interfaces\SalaryGarbge\ISalaryGarbgeScanService.cs" />
@@ -450,6 +463,14 @@
     <Content Include="Views\UserSignup\Register.cshtml" />
     <Content Include="Views\AdminUserApproval\Index.cshtml" />
     <Content Include="Views\AdminSalaryGarbage\Index.cshtml" />
+    <Content Include="Views\AdminEmployeeStatusReport\ServerSelection.cshtml" />
+    <Content Include="Views\AdminEmployeeStatusReport\DatabaseSelection.cshtml" />
+    <Content Include="Views\AdminEmployeeStatusReport\Parameter.cshtml" />
+    <Content Include="Views\AdminEmployeeStatusReport\EmployeeStatusReportResult.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\ServerSelection.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\DatabaseSelection.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\Parameter.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\ReportViewer.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -459,6 +480,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Repositories\Reports\" />
+    <Folder Include="Views\Reports\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202601280602277_dbchange.resx">
