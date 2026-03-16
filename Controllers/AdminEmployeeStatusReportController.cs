@@ -27,8 +27,10 @@ namespace AttendanceSyncApp.Controllers
             return View();
         }
 
-        public ActionResult Parameter()
+        [HttpGet]
+        public ActionResult Parameter(string selectedDatabases)
         {
+            Session["SelectedDatabases"] = new string[] { selectedDatabases };
             return View();
         }
 
@@ -36,10 +38,11 @@ namespace AttendanceSyncApp.Controllers
         public ActionResult ShowReport(EmployeeStatusReportFilterDto model)
         {
             int serverId = (int)Session["ServerId"];
+            var selectedDatabases = Session["SelectedDatabases"] as string[];
 
             var data = _service.GetEmployeeStatusReport(
                 serverId,
-                model.SelectedDatabases,
+                selectedDatabases != null ? new System.Collections.Generic.List<string>(selectedDatabases) : new System.Collections.Generic.List<string>(),
                 model.Status);
 
             return View("EmployeeStatusReportResult", data);

@@ -2,18 +2,14 @@
 {
     public class EmployeeStatusReportRowDto
     {
-        public string DatabaseName { get; set; }
-
-        public int Id { get; set; }
-
-        public int? BranchId { get; set; }
-
-        public int? GradeScaleId { get; set; }
-
-        public string MobileNo { get; set; }
-
-        public int? DesignationId { get; set; }
-
+        public string EmployeeId { get; set; }
+        public string EmployeeName { get; set; }
+        public string BranchCode { get; set; }
+        public string BranchName { get; set; }
+        public string DesignationName { get; set; }
         public decimal? BasicSalary { get; set; }
+        public string Email { get; set; }
+        public string MobileNo { get; set; }
+        public bool IsActive { get; set; }
     }
 }

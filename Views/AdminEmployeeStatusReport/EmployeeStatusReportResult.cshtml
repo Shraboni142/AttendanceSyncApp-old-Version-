@@ -42,13 +42,15 @@
 <table class="report-table">
     <thead>
         <tr>
-            <th>Database</th>
-            <th>Id</th>
-            <th>Branch Id</th>
-            <th>Grade Scale Id</th>
-            <th>Mobile No</th>
-            <th>Designation Id</th>
+            <th>Employee Id</th>
+            <th>Employee Name</th>
+            <th>Branch Code</th>
+            <th>Branch Name</th>
+            <th>Designation Name</th>
             <th>Basic Salary</th>
+            <th>Email</th>
+            <th>Mobile No</th>
+            <th>Status</th>
         </tr>
     </thead>
 
@@ -56,13 +58,15 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@item.DatabaseName</td>
-                <td>@item.Id</td>
-                <td>@item.BranchId</td>
-                <td>@item.GradeScaleId</td>
-                <td>@item.MobileNo</td>
-                <td>@item.DesignationId</td>
+                <td>@item.EmployeeId</td>
+                <td>@item.EmployeeName</td>
+                <td>@item.BranchCode</td>
+                <td>@item.BranchName</td>
+                <td>@item.DesignationName</td>
                 <td class="salary">@String.Format("{0:N2}", item.BasicSalary)</td>
+                <td>@item.Email</td>
+                <td>@item.MobileNo</td>
+                <td>@(item.IsActive ? "Active" : "Inactive")</td>
             </tr>
         }
     </tbody>

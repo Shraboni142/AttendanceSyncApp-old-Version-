@@ -1,14 +1,10 @@
 ﻿<h2>Select Status</h2>
 
 <form method="post" action="/AdminEmployeeStatusReport/ShowReport">
-
-    <input type="hidden" name="SelectedDatabases" value="@Request.QueryString["SelectedDatabases"]" />
-
     <select name="Status">
         <option value="1">Active</option>
         <option value="0">Inactive</option>
     </select>
 
     <button type="submit">Show Report</button>
-
 </form>

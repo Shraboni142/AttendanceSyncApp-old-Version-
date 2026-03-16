@@ -8,7 +8,6 @@ namespace AttendanceSyncApp.Services
 {
     public class AdminEmployeeStatusReportService : IAdminEmployeeStatusReportService
     {
-
         public List<EmployeeStatusReportRowDto> GetEmployeeStatusReport(
             int serverId,
             List<string> databases,
@@ -19,10 +18,12 @@ namespace AttendanceSyncApp.Services
             string serverIp = GetServerIp(serverId);
             string username = "sa";
             string password = "open";
-            if (databases == null)
+
+            if (databases == null || databases.Count == 0)
             {
                 return result;
             }
+
             foreach (var db in databases)
             {
                 string connString =
@@ -33,39 +34,49 @@ namespace AttendanceSyncApp.Services
                     conn.Open();
 
                     string query = @"
-                    SELECT 
-                        @DatabaseName AS DatabaseName,
-                        Id,
-                        BranchId,
-                        GradeScaleId,
-                        MobileNo,
-                        DesignationId,
-                        BasicSalary
-                    FROM dbo.Employees
-                    WHERE IsActive = @Status";
+                        SELECT
+                            e.EmployeeId,
+                            LTRIM(RTRIM(
+                                ISNULL(e.FirstName, '') + ' ' +
+                                ISNULL(e.MiddleName, '') + ' ' +
+                                ISNULL(e.LastName, '')
+                            )) AS EmployeeName,
+                            b.BranchCode,
+                            b.BranchName,
+                            d.DesignationName,
+                            e.BasicSalary,
+                            e.Email,
+                            e.MobileNo,
+                            e.IsActive
+                        FROM dbo.Employees e
+                        LEFT JOIN dbo.Branch b ON e.BranchId = b.Id
+                        LEFT JOIN dbo.Designation d ON e.DesignationId = d.Id
+                        WHERE e.IsActive = @Status
+                        ORDER BY e.EmployeeId";
 
-                    SqlCommand cmd = new SqlCommand(query, conn);
-
-                    cmd.Parameters.AddWithValue("@Status", status);
-                    cmd.Parameters.AddWithValue("@DatabaseName", db);
-
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    while (reader.Read())
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
                     {
-                        result.Add(new EmployeeStatusReportRowDto
-                        {
-                            DatabaseName = reader["DatabaseName"].ToString(),
-                            Id = Convert.ToInt32(reader["Id"]),
-                            BranchId = reader["BranchId"] as int?,
-                            GradeScaleId = reader["GradeScaleId"] as int?,
-                            MobileNo = reader["MobileNo"].ToString(),
-                            DesignationId = reader["DesignationId"] as int?,
-                            BasicSalary = reader["BasicSalary"] as decimal?
-                        });
-                    }
+                        cmd.Parameters.AddWithValue("@Status", status);
 
-                    reader.Close();
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                result.Add(new EmployeeStatusReportRowDto
+                                {
+                                    EmployeeId = reader["EmployeeId"] == DBNull.Value ? "" : reader["EmployeeId"].ToString(),
+                                    EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
+                                    BranchCode = reader["BranchCode"] == DBNull.Value ? "" : reader["BranchCode"].ToString(),
+                                    BranchName = reader["BranchName"] == DBNull.Value ? "" : reader["BranchName"].ToString(),
+                                    DesignationName = reader["DesignationName"] == DBNull.Value ? "" : reader["DesignationName"].ToString(),
+                                    BasicSalary = reader["BasicSalary"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(reader["BasicSalary"]),
+                                    Email = reader["Email"] == DBNull.Value ? "" : reader["Email"].ToString(),
+                                    MobileNo = reader["MobileNo"] == DBNull.Value ? "" : reader["MobileNo"].ToString(),
+                                    IsActive = reader["IsActive"] != DBNull.Value && Convert.ToBoolean(reader["IsActive"])
+                                });
+                            }
+                        }
+                    }
                 }
             }
 
@@ -74,7 +85,6 @@ namespace AttendanceSyncApp.Services
 
         private string GetServerIp(int serverId)
         {
-            // ekhane existing ServerIps table theke ip nite hobe
             return "192.168.26.242";
         }
     }
