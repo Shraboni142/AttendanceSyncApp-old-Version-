@@ -1,9 +1,14 @@
-﻿using System;
+﻿using AttandanceSyncApp.Helpers;
+using AttandanceSyncApp.Repositories;
+using AttendanceSyncApp.Models.DTOs.Reports;
+using AttendanceSyncApp.Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
-using AttendanceSyncApp.Models.DTOs.Reports;
-using AttendanceSyncApp.Services.Interfaces;
+
+using System.Linq;
+
 
 namespace AttendanceSyncApp.Services
 {
@@ -131,6 +136,62 @@ namespace AttendanceSyncApp.Services
             return result;
         }
 
+        public List<string> GetDatabasesForServer(int serverId)
+        {
+            var databases = new List<string>();
+
+            using (var unitOfWork = new AuthUnitOfWork())
+            {
+                var server = unitOfWork.ServerIps.GetById(serverId);
+                if (server == null || !server.IsActive)
+                {
+                    return databases;
+                }
+
+                var accessibleDatabases = unitOfWork.DatabaseAccess
+                    .GetAccessibleDatabasesByServerId(serverId)
+                    .Select(x => x.DatabaseName)
+                    .Distinct()
+                    .ToList();
+
+                if (!accessibleDatabases.Any())
+                {
+                    return databases;
+                }
+
+                var decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
+
+                string connectionString =
+                    $"Server={server.IpAddress};Database=master;User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    string query = @"
+                SELECT name
+                FROM sys.databases
+                WHERE database_id > 4
+                ORDER BY name";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var dbName = reader["name"].ToString();
+
+                            if (accessibleDatabases.Contains(dbName))
+                            {
+                                databases.Add(dbName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return databases;
+        }
         public List<EmployeeJobCardDetailDto> GetDetailData(int serverId, string databaseName, int employeeId, string fromDate, string toDate)
         {
             var result = new List<EmployeeJobCardDetailDto>();
@@ -146,36 +207,48 @@ namespace AttendanceSyncApp.Services
             {
                 conn.Open();
 
-                string employeeCode = "";
+                string query = @"
+;WITH DateRange AS
+(
+    SELECT CAST(@FromDate AS DATE) AS AttendanceDate
+    UNION ALL
+    SELECT DATEADD(DAY, 1, AttendanceDate)
+    FROM DateRange
+    WHERE AttendanceDate < CAST(@ToDate AS DATE)
+),
+LoginSummary AS
+(
+    SELECT
+        CAST([Date] AS DATE) AS AttendanceDate,
+        MIN(LoginTime) AS InTime,
+        MAX(LogoutTime) AS OutTime
+    FROM dbo.EmployeeManualLogins
+    WHERE EmployeeId = @EmployeeId
+      AND CAST([Date] AS DATE) BETWEEN CAST(@FromDate AS DATE) AND CAST(@ToDate AS DATE)
+      AND LoginTime IS NOT NULL
+    GROUP BY CAST([Date] AS DATE)
+)
+SELECT
+    DR.AttendanceDate AS [Date],
+    '' AS Shift,
+    LS.InTime,
+    LS.OutTime,
+    '' AS LateMinutes,
+    '' AS OTHours,
+    CASE
+        WHEN LS.InTime IS NOT NULL THEN 'Present'
+        ELSE 'Absent'
+    END AS DayStatus,
+    '' AS Remarks
+FROM DateRange DR
+LEFT JOIN LoginSummary LS
+    ON DR.AttendanceDate = LS.AttendanceDate
+ORDER BY DR.AttendanceDate
+OPTION (MAXRECURSION 1000);";
 
-                string employeeQuery = @"
-            SELECT EmployeeId
-            FROM dbo.Employees
-            WHERE Id = @Id";
-
-                using (SqlCommand employeeCmd = new SqlCommand(employeeQuery, conn))
+                using (SqlCommand attendanceCmd = new SqlCommand(query, conn))
                 {
-                    employeeCmd.Parameters.AddWithValue("@Id", employeeId);
-
-                    object employeeCodeObj = employeeCmd.ExecuteScalar();
-                    employeeCode = employeeCodeObj == null || employeeCodeObj == DBNull.Value
-                        ? ""
-                        : employeeCodeObj.ToString().Trim();
-                }
-
-                var presentDates = new HashSet<DateTime>();
-
-                string attendanceQuery = @"
-            SELECT DISTINCT
-                CAST([Date] AS date) AS AttendanceDate
-            FROM dbo.EmployeeManualLogins
-            WHERE TRY_CAST(EmployeeId AS INT) = TRY_CAST(@EmployeeCode AS INT)
-              AND LoginTime IS NOT NULL
-              AND CAST([Date] AS date) BETWEEN @FromDate AND @ToDate";
-
-                using (SqlCommand attendanceCmd = new SqlCommand(attendanceQuery, conn))
-                {
-                    attendanceCmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
+                    attendanceCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
                     attendanceCmd.Parameters.AddWithValue("@FromDate", Convert.ToDateTime(fromDate).Date);
                     attendanceCmd.Parameters.AddWithValue("@ToDate", Convert.ToDateTime(toDate).Date);
 
@@ -183,32 +256,23 @@ namespace AttendanceSyncApp.Services
                     {
                         while (reader.Read())
                         {
-                            if (reader["AttendanceDate"] != DBNull.Value)
+                            result.Add(new EmployeeJobCardDetailDto
                             {
-                                presentDates.Add(Convert.ToDateTime(reader["AttendanceDate"]).Date);
-                            }
+                                Date = Convert.ToDateTime(reader["Date"]).ToString("dd-MMM-yyyy"),
+                                Shift = reader["Shift"] == DBNull.Value ? "" : reader["Shift"].ToString(),
+                                InTime = reader["InTime"] == DBNull.Value
+                                    ? ""
+                                    : Convert.ToDateTime(reader["InTime"]).ToString("hh:mm tt"),
+                                OutTime = reader["OutTime"] == DBNull.Value
+                                    ? ""
+                                    : Convert.ToDateTime(reader["OutTime"]).ToString("hh:mm tt"),
+                                LateMinutes = reader["LateMinutes"] == DBNull.Value ? "" : reader["LateMinutes"].ToString(),
+                                OTHours = reader["OTHours"] == DBNull.Value ? "" : reader["OTHours"].ToString(),
+                                DayStatus = reader["DayStatus"] == DBNull.Value ? "" : reader["DayStatus"].ToString(),
+                                Remarks = reader["Remarks"] == DBNull.Value ? "" : reader["Remarks"].ToString()
+                            });
                         }
                     }
-                }
-
-                DateTime startDate = Convert.ToDateTime(fromDate).Date;
-                DateTime endDate = Convert.ToDateTime(toDate).Date;
-
-                for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
-                {
-                    bool isPresent = presentDates.Contains(date.Date);
-
-                    result.Add(new EmployeeJobCardDetailDto
-                    {
-                        Date = date.ToString("dd-MMM-yyyy"),
-                        Shift = "",
-                        InTime = "",
-                        OutTime = "",
-                        LateMinutes = "",
-                        OTHours = "",
-                        DayStatus = isPresent ? "Present" : "Absent",
-                        Remarks = ""
-                    });
                 }
             }
 

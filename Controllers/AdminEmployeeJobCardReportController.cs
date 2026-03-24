@@ -22,9 +22,11 @@ namespace AttendanceSyncApp.Controllers
         public ActionResult DatabaseSelection(int serverId)
         {
             Session["JobCardServerId"] = serverId;
-            return View();
-        }
 
+            var databases = _service.GetDatabasesForServer(serverId);
+
+            return View(databases);
+        }
         public ActionResult Parameter(int serverId, string databaseName)
         {
             Session["JobCardServerId"] = serverId;

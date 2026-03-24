@@ -5,6 +5,7 @@ namespace AttendanceSyncApp.Services.Interfaces
 {
     public interface IAdminEmployeeJobCardReportService
     {
+        List<string> GetDatabasesForServer(int serverId);
         List<EmployeeDropdownDto> GetEmployees(int serverId, string databaseName);
         EmployeeJobCardHeaderDto GetHeaderData(int serverId, string databaseName, int employeeId, string fromDateText, string toDateText);
         List<EmployeeJobCardDetailDto> GetDetailData(int serverId, string databaseName, int employeeId, string fromDate, string toDate);
