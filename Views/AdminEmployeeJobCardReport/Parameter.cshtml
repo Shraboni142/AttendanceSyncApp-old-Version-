@@ -1,5 +1,11 @@
 ﻿@model List<AttendanceSyncApp.Models.DTOs.Reports.EmployeeDropdownDto>
 
+<div style="text-align:right; margin-bottom:10px;">
+    <button onclick="history.back()"
+            style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px;">
+        ← Back
+    </button>
+</div>
 <h2>Employee Job Card</h2>
 
 <form method="post" action="/AdminEmployeeJobCardReport/GenerateReport">

@@ -48,9 +48,12 @@ namespace AttendanceSyncApp.Services
                             e.Email,
                             e.MobileNo,
                             e.IsActive
-                        FROM dbo.Employees e
-                        LEFT JOIN dbo.Branch b ON e.BranchId = b.Id
-                        LEFT JOIN dbo.Designation d ON e.DesignationId = d.Id
+                       FROM dbo.Employees e
+LEFT JOIN dbo.Branches b ON e.BranchId = b.Id
+LEFT JOIN dbo.Designations d ON e.DesignationId = d.Id
+LEFT JOIN dbo.Sections s ON e.SectionId = s.Id
+LEFT JOIN dbo.Locations l ON e.LocationId = l.Id
+
                         WHERE e.IsActive = @Status
                         ORDER BY e.EmployeeId";
 

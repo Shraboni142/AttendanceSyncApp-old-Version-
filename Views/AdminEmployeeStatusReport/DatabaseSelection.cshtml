@@ -1,14 +1,21 @@
 ﻿@model List<string>
 
+<div style="text-align:right; margin-bottom:10px;">
+    <button type="button" onclick="history.back()"
+            style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">
+        ← Back
+    </button>
+</div>
+
 <h2>Select Database</h2>
 
 <form method="get" action="/AdminEmployeeStatusReport/Parameter">
     <div style="margin-bottom:10px;">
         <label>Database</label><br />
-        <select name="selectedDatabases" required>
+        <select name="databaseName" required>
             <option value="">-- Select Database --</option>
 
-            @if (Model != null)
+            @if (Model != null && Model.Count > 0)
             {
                 foreach (var db in Model)
                 {
