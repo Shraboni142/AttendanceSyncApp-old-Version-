@@ -12,63 +12,6 @@ namespace AttendanceSyncApp.Services
 {
     public class AdminEmployeeJobCardReportService : IAdminEmployeeJobCardReportService
     {
-        public List<string> GetDatabasesForServer(int serverId)
-        {
-            var databases = new List<string>();
-
-            using (var unitOfWork = new AuthUnitOfWork())
-            {
-                var server = unitOfWork.ServerIps.GetById(serverId);
-                if (server == null || !server.IsActive)
-                {
-                    return databases;
-                }
-
-                var accessibleDatabases = unitOfWork.DatabaseAccess
-                    .GetAccessibleDatabasesByServerId(serverId)
-                    .Select(x => x.DatabaseName)
-                    .Distinct()
-                    .ToList();
-
-                if (!accessibleDatabases.Any())
-                {
-                    return databases;
-                }
-
-                var decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
-
-                string connectionString =
-                    $"Server={server.IpAddress};Database=master;User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
-
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-
-                    string query = @"
-                        SELECT name
-                        FROM sys.databases
-                        WHERE database_id > 4
-                        ORDER BY name";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var dbName = reader["name"].ToString();
-
-                            if (accessibleDatabases.Contains(dbName))
-                            {
-                                databases.Add(dbName);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return databases;
-        }
-
         public List<EmployeeDropdownDto> GetEmployees(int serverId, string databaseName)
         {
             var result = new List<EmployeeDropdownDto>();
@@ -178,6 +121,7 @@ namespace AttendanceSyncApp.Services
                             result.Section = reader["SectionName"] == DBNull.Value ? "" : reader["SectionName"].ToString();
                             result.Branch = reader["BranchName"] == DBNull.Value ? "" : reader["BranchName"].ToString();
                             result.Location = reader["LocationName"] == DBNull.Value ? "" : reader["LocationName"].ToString();
+
                             result.DOJ = reader["JoiningDate"] == DBNull.Value
                                 ? ""
                                 : Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
@@ -187,6 +131,63 @@ namespace AttendanceSyncApp.Services
             }
 
             return result;
+        }
+
+        public List<string> GetDatabasesForServer(int serverId)
+        {
+            var databases = new List<string>();
+
+            using (var unitOfWork = new AuthUnitOfWork())
+            {
+                var server = unitOfWork.ServerIps.GetById(serverId);
+                if (server == null || !server.IsActive)
+                {
+                    return databases;
+                }
+
+                var accessibleDatabases = unitOfWork.DatabaseAccess
+                    .GetAccessibleDatabasesByServerId(serverId)
+                    .Select(x => x.DatabaseName)
+                    .Distinct()
+                    .ToList();
+
+                if (!accessibleDatabases.Any())
+                {
+                    return databases;
+                }
+
+                var decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
+
+                string connectionString =
+                    $"Server={server.IpAddress};Database=master;User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    string query = @"
+                        SELECT name
+                        FROM sys.databases
+                        WHERE database_id > 4
+                        ORDER BY name";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var dbName = reader["name"].ToString();
+
+                            if (accessibleDatabases.Contains(dbName))
+                            {
+                                databases.Add(dbName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return databases;
         }
 
         public List<EmployeeJobCardDetailDto> GetDetailData(int serverId, string databaseName, int employeeId, string fromDate, string toDate)
@@ -200,19 +201,21 @@ namespace AttendanceSyncApp.Services
                 conn.Open();
 
                 string query = @"
-;WITH DateRange AS
+;WITH EmployeeInfo AS
+(
+    SELECT 
+        Id AS InternalEmployeeId,
+        LTRIM(RTRIM(CAST(EmployeeId AS NVARCHAR(50)))) AS EmployeeCode
+    FROM dbo.Employees
+    WHERE Id = @EmployeeId
+),
+DateRange AS
 (
     SELECT CAST(@FromDate AS DATE) AS AttendanceDate
     UNION ALL
     SELECT DATEADD(DAY, 1, AttendanceDate)
     FROM DateRange
     WHERE AttendanceDate < CAST(@ToDate AS DATE)
-),
-EmployeeInfo AS
-(
-    SELECT EmployeeId
-    FROM dbo.Employees
-    WHERE Id = @EmployeeId
 ),
 LoginSummary AS
 (
@@ -221,10 +224,15 @@ LoginSummary AS
         MIN(eml.LoginTime) AS InTime,
         MAX(eml.LogoutTime) AS OutTime
     FROM dbo.EmployeeManualLogins eml
-    INNER JOIN EmployeeInfo ei
-        ON LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(CAST(ei.EmployeeId AS NVARCHAR(50))))
+    CROSS JOIN EmployeeInfo ei
     WHERE CAST(eml.[Date] AS DATE) BETWEEN CAST(@FromDate AS DATE) AND CAST(@ToDate AS DATE)
       AND eml.LoginTime IS NOT NULL
+      AND
+      (
+          LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(CAST(ei.InternalEmployeeId AS NVARCHAR(50))))
+          OR
+          LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = ei.EmployeeCode
+      )
     GROUP BY CAST(eml.[Date] AS DATE)
 )
 SELECT
@@ -245,13 +253,13 @@ LEFT JOIN LoginSummary LS
 ORDER BY DR.AttendanceDate
 OPTION (MAXRECURSION 1000);";
 
-                using (SqlCommand attendanceCmd = new SqlCommand(query, conn))
+                using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    attendanceCmd.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employeeId;
-                    attendanceCmd.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(fromDate).Date;
-                    attendanceCmd.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(toDate).Date;
+                    cmd.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employeeId;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(fromDate).Date;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(toDate).Date;
 
-                    using (SqlDataReader reader = attendanceCmd.ExecuteReader())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -273,7 +281,6 @@ OPTION (MAXRECURSION 1000);";
 
             return result;
         }
-
         public EmployeeJobCardSummaryDto GetSummaryData(List<EmployeeJobCardDetailDto> details)
         {
             var result = new EmployeeJobCardSummaryDto();

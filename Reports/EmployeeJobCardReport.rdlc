@@ -29,36 +29,36 @@
 					<DataField>DateRange</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="EmployeeId">
-					<DataField>EmployeeId</DataField>
+				<Field Name="EmployeeCode">
+					<DataField>EmployeeCode</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
 				<Field Name="EmployeeName">
 					<DataField>EmployeeName</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="DesignationName">
-					<DataField>DesignationName</DataField>
+				<Field Name="Designation">
+					<DataField>Designation</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="DepartmentName">
-					<DataField>DepartmentName</DataField>
+				<Field Name="Department">
+					<DataField>Department</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="Doj">
-					<DataField>Doj</DataField>
+				<Field Name="DOJ">
+					<DataField>DOJ</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="SectionName">
-					<DataField>SectionName</DataField>
+				<Field Name="Section">
+					<DataField>Section</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="BranchName">
-					<DataField>BranchName</DataField>
+				<Field Name="Branch">
+					<DataField>Branch</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
-				<Field Name="LocationName">
-					<DataField>LocationName</DataField>
+				<Field Name="Location">
+					<DataField>Location</DataField>
 					<rd:TypeName>System.String</rd:TypeName>
 				</Field>
 				<Field Name="Phone">
@@ -496,7 +496,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!EmployeeId.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!EmployeeCode.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -556,7 +556,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!DesignationName.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!Designation.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -586,7 +586,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!DepartmentName.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!Department.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -764,7 +764,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!Doj.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!DOJ.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -795,7 +795,7 @@
                 <TextRuns>
 				
                   <TextRun>
-					  <Value>=First(Fields!SectionName.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!Section.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -825,7 +825,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!BranchName.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!Branch.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -855,7 +855,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!LocationName.Value, "HeaderDataSet")</Value>
+					  <Value>=First(Fields!Location.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
