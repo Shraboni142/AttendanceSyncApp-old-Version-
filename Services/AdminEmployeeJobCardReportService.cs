@@ -4,16 +4,71 @@ using AttendanceSyncApp.Models.DTOs.Reports;
 using AttendanceSyncApp.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
-using System.Globalization;
-
 using System.Linq;
-
 
 namespace AttendanceSyncApp.Services
 {
     public class AdminEmployeeJobCardReportService : IAdminEmployeeJobCardReportService
     {
+        public List<string> GetDatabasesForServer(int serverId)
+        {
+            var databases = new List<string>();
+
+            using (var unitOfWork = new AuthUnitOfWork())
+            {
+                var server = unitOfWork.ServerIps.GetById(serverId);
+                if (server == null || !server.IsActive)
+                {
+                    return databases;
+                }
+
+                var accessibleDatabases = unitOfWork.DatabaseAccess
+                    .GetAccessibleDatabasesByServerId(serverId)
+                    .Select(x => x.DatabaseName)
+                    .Distinct()
+                    .ToList();
+
+                if (!accessibleDatabases.Any())
+                {
+                    return databases;
+                }
+
+                var decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
+
+                string connectionString =
+                    $"Server={server.IpAddress};Database=master;User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
+
+                using (SqlConnection conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+
+                    string query = @"
+                        SELECT name
+                        FROM sys.databases
+                        WHERE database_id > 4
+                        ORDER BY name";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var dbName = reader["name"].ToString();
+
+                            if (accessibleDatabases.Contains(dbName))
+                            {
+                                databases.Add(dbName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return databases;
+        }
+
         public List<EmployeeDropdownDto> GetEmployees(int serverId, string databaseName)
         {
             var result = new List<EmployeeDropdownDto>();
@@ -81,7 +136,6 @@ namespace AttendanceSyncApp.Services
                         c.Phone,
                         c.Fax,
                         c.Email,
-
                         e.EmployeeId AS EmployeeCode,
                         LTRIM(RTRIM(
                             ISNULL(e.FirstName, '') + ' ' +
@@ -105,7 +159,7 @@ namespace AttendanceSyncApp.Services
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    cmd.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employeeId;
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -124,7 +178,6 @@ namespace AttendanceSyncApp.Services
                             result.Section = reader["SectionName"] == DBNull.Value ? "" : reader["SectionName"].ToString();
                             result.Branch = reader["BranchName"] == DBNull.Value ? "" : reader["BranchName"].ToString();
                             result.Location = reader["LocationName"] == DBNull.Value ? "" : reader["LocationName"].ToString();
-
                             result.DOJ = reader["JoiningDate"] == DBNull.Value
                                 ? ""
                                 : Convert.ToDateTime(reader["JoiningDate"]).ToString("dd-MM-yyyy");
@@ -136,72 +189,11 @@ namespace AttendanceSyncApp.Services
             return result;
         }
 
-        public List<string> GetDatabasesForServer(int serverId)
-        {
-            var databases = new List<string>();
-
-            using (var unitOfWork = new AuthUnitOfWork())
-            {
-                var server = unitOfWork.ServerIps.GetById(serverId);
-                if (server == null || !server.IsActive)
-                {
-                    return databases;
-                }
-
-                var accessibleDatabases = unitOfWork.DatabaseAccess
-                    .GetAccessibleDatabasesByServerId(serverId)
-                    .Select(x => x.DatabaseName)
-                    .Distinct()
-                    .ToList();
-
-                if (!accessibleDatabases.Any())
-                {
-                    return databases;
-                }
-
-                var decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
-
-                string connectionString =
-                    $"Server={server.IpAddress};Database=master;User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
-
-                using (SqlConnection conn = new SqlConnection(connectionString))
-                {
-                    conn.Open();
-
-                    string query = @"
-                SELECT name
-                FROM sys.databases
-                WHERE database_id > 4
-                ORDER BY name";
-
-                    using (SqlCommand cmd = new SqlCommand(query, conn))
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            var dbName = reader["name"].ToString();
-
-                            if (accessibleDatabases.Contains(dbName))
-                            {
-                                databases.Add(dbName);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return databases;
-        }
         public List<EmployeeJobCardDetailDto> GetDetailData(int serverId, string databaseName, int employeeId, string fromDate, string toDate)
         {
             var result = new List<EmployeeJobCardDetailDto>();
 
-            string serverIp = GetServerIp(serverId);
-            string username = "sa";
-            string password = "open";
-
-            string connString =
-                $"Server={serverIp};Database={databaseName};User Id={username};Password={password};TrustServerCertificate=True;";
+            string connString = GetConnectionString(serverId, databaseName);
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
@@ -216,17 +208,24 @@ namespace AttendanceSyncApp.Services
     FROM DateRange
     WHERE AttendanceDate < CAST(@ToDate AS DATE)
 ),
+EmployeeInfo AS
+(
+    SELECT EmployeeId
+    FROM dbo.Employees
+    WHERE Id = @EmployeeId
+),
 LoginSummary AS
 (
     SELECT
-        CAST([Date] AS DATE) AS AttendanceDate,
-        MIN(LoginTime) AS InTime,
-        MAX(LogoutTime) AS OutTime
-    FROM dbo.EmployeeManualLogins
-    WHERE EmployeeId = @EmployeeId
-      AND CAST([Date] AS DATE) BETWEEN CAST(@FromDate AS DATE) AND CAST(@ToDate AS DATE)
-      AND LoginTime IS NOT NULL
-    GROUP BY CAST([Date] AS DATE)
+        CAST(eml.[Date] AS DATE) AS AttendanceDate,
+        MIN(eml.LoginTime) AS InTime,
+        MAX(eml.LogoutTime) AS OutTime
+    FROM dbo.EmployeeManualLogins eml
+    INNER JOIN EmployeeInfo ei
+        ON LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(CAST(ei.EmployeeId AS NVARCHAR(50))))
+    WHERE CAST(eml.[Date] AS DATE) BETWEEN CAST(@FromDate AS DATE) AND CAST(@ToDate AS DATE)
+      AND eml.LoginTime IS NOT NULL
+    GROUP BY CAST(eml.[Date] AS DATE)
 )
 SELECT
     DR.AttendanceDate AS [Date],
@@ -248,9 +247,9 @@ OPTION (MAXRECURSION 1000);";
 
                 using (SqlCommand attendanceCmd = new SqlCommand(query, conn))
                 {
-                    attendanceCmd.Parameters.AddWithValue("@EmployeeId", employeeId);
-                    attendanceCmd.Parameters.AddWithValue("@FromDate", Convert.ToDateTime(fromDate).Date);
-                    attendanceCmd.Parameters.AddWithValue("@ToDate", Convert.ToDateTime(toDate).Date);
+                    attendanceCmd.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employeeId;
+                    attendanceCmd.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(fromDate).Date;
+                    attendanceCmd.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(toDate).Date;
 
                     using (SqlDataReader reader = attendanceCmd.ExecuteReader())
                     {
@@ -260,12 +259,8 @@ OPTION (MAXRECURSION 1000);";
                             {
                                 Date = Convert.ToDateTime(reader["Date"]).ToString("dd-MMM-yyyy"),
                                 Shift = reader["Shift"] == DBNull.Value ? "" : reader["Shift"].ToString(),
-                                InTime = reader["InTime"] == DBNull.Value
-                                    ? ""
-                                    : Convert.ToDateTime(reader["InTime"]).ToString("hh:mm tt"),
-                                OutTime = reader["OutTime"] == DBNull.Value
-                                    ? ""
-                                    : Convert.ToDateTime(reader["OutTime"]).ToString("hh:mm tt"),
+                                InTime = reader["InTime"] == DBNull.Value ? "" : Convert.ToDateTime(reader["InTime"]).ToString("hh:mm tt"),
+                                OutTime = reader["OutTime"] == DBNull.Value ? "" : Convert.ToDateTime(reader["OutTime"]).ToString("hh:mm tt"),
                                 LateMinutes = reader["LateMinutes"] == DBNull.Value ? "" : reader["LateMinutes"].ToString(),
                                 OTHours = reader["OTHours"] == DBNull.Value ? "" : reader["OTHours"].ToString(),
                                 DayStatus = reader["DayStatus"] == DBNull.Value ? "" : reader["DayStatus"].ToString(),
@@ -317,66 +312,130 @@ OPTION (MAXRECURSION 1000);";
             return result;
         }
 
-        private string GetEmployeeCodeById(int serverId, string databaseName, int employeeId)
+        public EmployeeJobCardDayDetailDto GetDayDetailReport(int serverId, string databaseName, int employeeId, string selectedDate)
         {
+            EmployeeJobCardDayDetailDto model = null;
+
             string connString = GetConnectionString(serverId, databaseName);
 
             using (SqlConnection conn = new SqlConnection(connString))
             {
                 conn.Open();
 
-                string query = @"SELECT EmployeeId FROM dbo.Employees WHERE Id = @EmployeeId";
+                string query = @"
+SELECT TOP 1
+    c.CompanyName,
+    e.EmployeeId AS EmployeeCode,
+    LTRIM(RTRIM(
+        ISNULL(e.FirstName, '') + ' ' +
+        ISNULL(e.MiddleName, '') + ' ' +
+        ISNULL(e.LastName, '')
+    )) AS EmployeeName,
+    d.DesignationName,
+    dp.DepartmentName,
+    b.BranchName,
+    s.SectionName,
+    l.LocationName AS Location,
+    CONVERT(VARCHAR(20), e.JoiningDate, 105) AS DOJ,
+    CONVERT(VARCHAR(20), @SelectedDate, 106) AS AttendanceDate,
+    CASE
+        WHEN eml.LoginTime IS NOT NULL THEN 'Present'
+        ELSE 'Absent'
+    END AS DayStatus,
+    CONVERT(VARCHAR(20), eml.LoginTime, 100) AS LoginTime,
+    CONVERT(VARCHAR(20), eml.LogoutTime, 100) AS LogoutTime,
+    CONVERT(VARCHAR(20), eml.ExpectedLoginTime, 100) AS ExpectedLoginTime,
+    CONVERT(VARCHAR(20), eml.ExpectedLogoutTime, 100) AS ExpectedLogoutTime,
+    CAST(eml.LoginworkstationId AS VARCHAR(50)) AS LoginWorkstationId,
+    CAST(eml.LogoutworkstationId AS VARCHAR(50)) AS LogoutWorkstationId,
+    eml.Processcode,
+    CAST(eml.BranchId AS VARCHAR(50)) AS BranchId,
+    CASE WHEN eml.Ismanuallogin = 1 THEN 'Yes' ELSE 'No' END AS IsManualLogin,
+    CASE WHEN eml.IsLate = 1 THEN 'Yes' ELSE 'No' END AS IsLate,
+    CONVERT(VARCHAR(20), eml.AbsentCountingTime, 100) AS AbsentCountingTime,
+    CASE
+        WHEN eml.LoginTime IS NOT NULL AND eml.LogoutTime IS NOT NULL
+        THEN CAST(DATEDIFF(MINUTE, eml.LoginTime, eml.LogoutTime) / 60 AS VARCHAR(10))
+             + ' Hr '
+             + CAST(DATEDIFF(MINUTE, eml.LoginTime, eml.LogoutTime) % 60 AS VARCHAR(10))
+             + ' Min'
+        ELSE ''
+    END AS WorkingHours,
+    CASE
+        WHEN eml.LoginTime IS NOT NULL THEN 'Login record found'
+        ELSE 'No login record found for selected date'
+    END AS Remarks
+FROM dbo.Employees e
+LEFT JOIN dbo.Designations d ON e.DesignationId = d.Id
+LEFT JOIN dbo.Departments dp ON e.DepartmentId = dp.Id
+LEFT JOIN dbo.Branches b ON e.BranchId = b.Id
+LEFT JOIN dbo.Sections s ON e.SectionId = s.Id
+LEFT JOIN dbo.Locations l ON e.LocationId = l.Id
+LEFT JOIN dbo.Companies c ON e.CompanyId = c.Id
+LEFT JOIN dbo.EmployeeManualLogins eml
+       ON LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(CAST(e.EmployeeId AS NVARCHAR(50))))
+      AND CAST(eml.[Date] AS DATE) = CAST(@SelectedDate AS DATE)
+WHERE e.Id = @EmployeeId;";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    cmd.Parameters.Add("@EmployeeId", SqlDbType.Int).Value = employeeId;
+                    cmd.Parameters.Add("@SelectedDate", SqlDbType.Date).Value = Convert.ToDateTime(selectedDate).Date;
 
-                    object value = cmd.ExecuteScalar();
-                    return value == null || value == DBNull.Value ? "" : value.ToString();
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            model = new EmployeeJobCardDayDetailDto
+                            {
+                                CompanyName = reader["CompanyName"] == DBNull.Value ? "" : reader["CompanyName"].ToString(),
+                                EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
+                                EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
+                                Designation = reader["DesignationName"] == DBNull.Value ? "" : reader["DesignationName"].ToString(),
+                                Department = reader["DepartmentName"] == DBNull.Value ? "" : reader["DepartmentName"].ToString(),
+                                Branch = reader["BranchName"] == DBNull.Value ? "" : reader["BranchName"].ToString(),
+                                Section = reader["SectionName"] == DBNull.Value ? "" : reader["SectionName"].ToString(),
+                                Location = reader["Location"] == DBNull.Value ? "" : reader["Location"].ToString(),
+                                DOJ = reader["DOJ"] == DBNull.Value ? "" : reader["DOJ"].ToString(),
+                                AttendanceDate = reader["AttendanceDate"] == DBNull.Value ? "" : reader["AttendanceDate"].ToString(),
+                                DayStatus = reader["DayStatus"] == DBNull.Value ? "" : reader["DayStatus"].ToString(),
+                                LoginTime = reader["LoginTime"] == DBNull.Value ? "" : reader["LoginTime"].ToString(),
+                                LogoutTime = reader["LogoutTime"] == DBNull.Value ? "" : reader["LogoutTime"].ToString(),
+                                ExpectedLoginTime = reader["ExpectedLoginTime"] == DBNull.Value ? "" : reader["ExpectedLoginTime"].ToString(),
+                                ExpectedLogoutTime = reader["ExpectedLogoutTime"] == DBNull.Value ? "" : reader["ExpectedLogoutTime"].ToString(),
+                                LoginWorkstationId = reader["LoginWorkstationId"] == DBNull.Value ? "" : reader["LoginWorkstationId"].ToString(),
+                                LogoutWorkstationId = reader["LogoutWorkstationId"] == DBNull.Value ? "" : reader["LogoutWorkstationId"].ToString(),
+                                Processcode = reader["Processcode"] == DBNull.Value ? "" : reader["Processcode"].ToString(),
+                                BranchId = reader["BranchId"] == DBNull.Value ? "" : reader["BranchId"].ToString(),
+                                IsManualLogin = reader["IsManualLogin"] == DBNull.Value ? "" : reader["IsManualLogin"].ToString(),
+                                IsLate = reader["IsLate"] == DBNull.Value ? "" : reader["IsLate"].ToString(),
+                                AbsentCountingTime = reader["AbsentCountingTime"] == DBNull.Value ? "" : reader["AbsentCountingTime"].ToString(),
+                                WorkingHours = reader["WorkingHours"] == DBNull.Value ? "" : reader["WorkingHours"].ToString(),
+                                Remarks = reader["Remarks"] == DBNull.Value ? "" : reader["Remarks"].ToString()
+                            };
+                        }
+                    }
                 }
             }
-        }
 
-        private bool HasColumn(int serverId, string databaseName, string tableName, string columnName)
-        {
-            string connString = GetConnectionString(serverId, databaseName);
-
-            using (SqlConnection conn = new SqlConnection(connString))
-            {
-                conn.Open();
-
-                string query = @"SELECT COL_LENGTH(@TableName, @ColumnName)";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@TableName", tableName);
-                    cmd.Parameters.AddWithValue("@ColumnName", columnName);
-
-                    object value = cmd.ExecuteScalar();
-                    return value != DBNull.Value && value != null;
-                }
-            }
+            return model;
         }
 
         private string GetConnectionString(int serverId, string databaseName)
         {
-            string serverIp = GetServerIp(serverId);
-            string username = "sa";
-            string password = "open";
+            using (var unitOfWork = new AuthUnitOfWork())
+            {
+                var server = unitOfWork.ServerIps.GetById(serverId);
 
-            return $"Server={serverIp};Database={databaseName};User Id={username};Password={password};TrustServerCertificate=True;";
-        }
+                if (server == null || !server.IsActive)
+                {
+                    throw new Exception("Active server information not found.");
+                }
 
-        private string GetServerIp(int serverId)
-        {
-            return "192.168.26.242";
-        }
+                string decryptedPassword = EncryptionHelper.Decrypt(server.DatabasePassword);
 
-        private class ManualLoginRow
-        {
-            public DateTime AttendanceDate { get; set; }
-            public DateTime? LoginTime { get; set; }
-            public DateTime? OutTime { get; set; }
+                return $"Server={server.IpAddress};Database={databaseName};User Id={server.DatabaseUser};Password={decryptedPassword};TrustServerCertificate=True;";
+            }
         }
     }
 }

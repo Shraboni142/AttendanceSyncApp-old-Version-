@@ -1,7 +1,9 @@
-﻿using System.Web.Mvc;
-using AttendanceSyncApp.Models.DTOs.Reports;
+﻿using AttendanceSyncApp.Models.DTOs.Reports;
 using AttendanceSyncApp.Services;
 using AttendanceSyncApp.Services.Interfaces;
+using Microsoft.Reporting.WebForms;
+using System.Collections.Generic;
+using System.Web.Mvc;
 
 namespace AttendanceSyncApp.Controllers
 {
@@ -27,6 +29,8 @@ namespace AttendanceSyncApp.Controllers
 
             return View(databases);
         }
+
+        [HttpGet]
         public ActionResult Parameter(int serverId, string databaseName)
         {
             Session["JobCardServerId"] = serverId;
@@ -38,6 +42,7 @@ namespace AttendanceSyncApp.Controllers
 
             return View(employees);
         }
+
         [HttpPost]
         public ActionResult GenerateReport(EmployeeJobCardReportFilterDto model)
         {
@@ -59,10 +64,30 @@ namespace AttendanceSyncApp.Controllers
 
             var summary = _service.GetSummaryData(details);
 
-            ViewBag.Header = header;
-            ViewBag.Details = details;
-            ViewBag.Summary = summary;
+            ReportViewer viewer = new ReportViewer();
+            viewer.ProcessingMode = ProcessingMode.Local;
+            viewer.SizeToReportContent = true;
+            viewer.Width = System.Web.UI.WebControls.Unit.Percentage(100);
+            viewer.Height = System.Web.UI.WebControls.Unit.Pixel(1200);
 
+            viewer.LocalReport.ReportPath = Server.MapPath("~/Reports/EmployeeJobCardReport.rdlc");
+            viewer.LocalReport.DataSources.Clear();
+
+            viewer.LocalReport.DataSources.Add(
+                new ReportDataSource("HeaderDataSet", new List<EmployeeJobCardHeaderDto> { header })
+            );
+
+            viewer.LocalReport.DataSources.Add(
+                new ReportDataSource("DetailDataSet", details)
+            );
+
+            viewer.LocalReport.DataSources.Add(
+                new ReportDataSource("SummaryDataSet", new List<EmployeeJobCardSummaryDto> { summary })
+            );
+
+            viewer.LocalReport.Refresh();
+
+            ViewBag.ReportViewer = viewer;
             return View("ReportViewer");
         }
     }

@@ -16,8 +16,8 @@ namespace AttendanceSyncApp.Services
             var result = new List<EmployeeStatusReportRowDto>();
 
             string serverIp = GetServerIp(serverId);
-            string username = "sa";
-            string password = "open";
+            string username = "intran";
+            string password = "!ntr@n321";
 
             if (databases == null || databases.Count == 0)
             {
@@ -27,7 +27,7 @@ namespace AttendanceSyncApp.Services
             foreach (var db in databases)
             {
                 string connString =
-                    $"Server={serverIp};Database={db};User Id={username};Password={password};TrustServerCertificate=True;";
+                    $"Server={serverIp};Database={db};User Id={username};Password={password};Encrypt=False;TrustServerCertificate=True;";
 
                 using (SqlConnection conn = new SqlConnection(connString))
                 {
@@ -88,7 +88,7 @@ LEFT JOIN dbo.Locations l ON e.LocationId = l.Id
 
         private string GetServerIp(int serverId)
         {
-            return "192.168.26.242";
+            return "192.168.14.100";
         }
     }
 }

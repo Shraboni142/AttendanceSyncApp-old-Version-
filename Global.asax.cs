@@ -11,6 +11,8 @@ namespace AttandanceSyncApp
     {
         protected void Application_Start()
         {
+            SqlServerTypes.Utilities.LoadNativeAssemblies(Server.MapPath("~/bin"));
+
             AreaRegistration.RegisterAllAreas();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
         }

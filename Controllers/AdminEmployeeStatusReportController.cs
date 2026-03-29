@@ -28,7 +28,7 @@ namespace AttendanceSyncApp.Controllers
             List<string> databases = new List<string>();
 
             string connectionString =
-                "Server=192.168.26.242;Database=master;User Id=sa;Password=open;TrustServerCertificate=True;";
+    "Server=192.168.14.100;Database=master;User Id=intran;Password=!ntr@n321;Encrypt=False;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
