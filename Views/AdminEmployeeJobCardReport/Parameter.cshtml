@@ -9,7 +9,7 @@
 
 <h2>Employee Job Card</h2>
 
-<form method="post" action="/AdminEmployeeJobCardReport/GenerateReport">
+<form id="jobCardForm" method="post" action="/AdminEmployeeJobCardReport/GenerateReport">
     <input type="hidden" name="ServerId" value="@ViewBag.ServerId" />
     <input type="hidden" name="DatabaseName" value="@ViewBag.DatabaseName" />
 
@@ -48,7 +48,7 @@
         </select>
     </div>
 
-    <button type="submit">Generate Report</button>
+    <button type="button" id="btnGenerateReport">Generate Report</button>
 </form>
 
 <script src="~/Scripts/jquery-3.7.1.min.js"></script>
@@ -61,6 +61,24 @@
 
         $('#BranchId, #Status').change(function () {
             loadEmployees();
+        });
+
+        $('#btnGenerateReport').click(function () {
+            var form = $('#jobCardForm')[0];
+            var selectedEmployeeId = $('#EmployeeId').val();
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if (selectedEmployeeId === '-1') {
+                $('#jobCardForm').attr('action', '/AdminEmployeeJobCardReport/GenerateAllEmployeeHtmlReport');
+            } else {
+                $('#jobCardForm').attr('action', '/AdminEmployeeJobCardReport/GenerateReport');
+            }
+
+            form.submit();
         });
 
         function loadBranches() {
@@ -109,6 +127,10 @@
                     status: status
                 },
                 success: function (data) {
+                    if (data && data.length > 0) {
+                        employeeDropdown.append('<option value="-1">All</option>');
+                    }
+
                     $.each(data, function (i, item) {
                         employeeDropdown.append('<option value="' + item.Id + '">' + item.DisplayText + '</option>');
                     });

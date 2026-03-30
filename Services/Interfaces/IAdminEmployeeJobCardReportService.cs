@@ -13,5 +13,15 @@ namespace AttendanceSyncApp.Services.Interfaces
         List<EmployeeDropdownDto> GetEmployeesByBranchAndStatus(int serverId, string databaseName, int branchId, int status);
         EmployeeJobCardDayDetailDto GetDayDetailReport(int serverId, string databaseName, int employeeId, string selectedDate);
         EmployeeJobCardSummaryDto GetSummaryData(List<EmployeeJobCardDetailDto> details);
+
+        EmployeeJobCardAllReportViewDto GetAllEmployeeHtmlReport(
+            int serverId,
+            string databaseName,
+            int branchId,
+            int status,
+            string fromDateText,
+            string toDateText,
+            string fromDate,
+            string toDate);
     }
 }

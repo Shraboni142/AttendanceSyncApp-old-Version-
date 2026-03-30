@@ -218,6 +218,7 @@ namespace AttendanceSyncApp.Services
 
             return result;
         }
+
         public List<string> GetDatabasesForServer(int serverId)
         {
             var databases = new List<string>();
@@ -366,6 +367,7 @@ OPTION (MAXRECURSION 1000);";
 
             return result;
         }
+
         public EmployeeJobCardSummaryDto GetSummaryData(List<EmployeeJobCardDetailDto> details)
         {
             var result = new EmployeeJobCardSummaryDto();
@@ -511,6 +513,151 @@ WHERE e.Id = @EmployeeId;";
             }
 
             return model;
+        }
+
+        public EmployeeJobCardAllReportViewDto GetAllEmployeeHtmlReport(
+            int serverId,
+            string databaseName,
+            int branchId,
+            int status,
+            string fromDateText,
+            string toDateText,
+            string fromDate,
+            string toDate)
+        {
+            var result = new EmployeeJobCardAllReportViewDto
+            {
+                ReportTitle = "Employee Job Card Report",
+                FromDateText = fromDateText,
+                ToDateText = toDateText
+            };
+
+            string connString = GetConnectionString(serverId, databaseName);
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+
+                string headerQuery = @"
+SELECT TOP 1
+    CompanyName,
+    Address,
+    Phone,
+    Fax,
+    Email
+FROM dbo.Companies;";
+
+                using (SqlCommand cmd = new SqlCommand(headerQuery, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        result.CompanyName = reader["CompanyName"] == DBNull.Value ? "" : reader["CompanyName"].ToString();
+                        result.Address = reader["Address"] == DBNull.Value ? "" : reader["Address"].ToString();
+                        result.Phone = reader["Phone"] == DBNull.Value ? "" : reader["Phone"].ToString();
+                        result.Fax = reader["Fax"] == DBNull.Value ? "" : reader["Fax"].ToString();
+                        result.Email = reader["Email"] == DBNull.Value ? "" : reader["Email"].ToString();
+                    }
+                }
+
+                string rowQuery = @"
+;WITH EmployeeBase AS
+(
+    SELECT
+        e.Id,
+        LTRIM(RTRIM(CAST(e.EmployeeId AS NVARCHAR(50)))) AS EmployeeCode,
+        LTRIM(RTRIM(
+            ISNULL(e.FirstName, '') + ' ' +
+            ISNULL(e.MiddleName, '') + ' ' +
+            ISNULL(e.LastName, '')
+        )) AS EmployeeName,
+        ISNULL(d.DesignationName, '') AS Designation,
+        ISNULL(dp.DepartmentName, '') AS Department
+    FROM dbo.Employees e
+    LEFT JOIN dbo.Designations d ON e.DesignationId = d.Id
+    LEFT JOIN dbo.Departments dp ON e.DepartmentId = dp.Id
+    WHERE e.BranchId = @BranchId
+      AND e.IsActive = @Status
+),
+DateRange AS
+(
+    SELECT CAST(@FromDate AS DATE) AS AttendanceDate
+    UNION ALL
+    SELECT DATEADD(DAY, 1, AttendanceDate)
+    FROM DateRange
+    WHERE AttendanceDate < CAST(@ToDate AS DATE)
+),
+LoginSummary AS
+(
+    SELECT
+        eb.Id AS EmployeeInternalId,
+        CAST(eml.[Date] AS DATE) AS AttendanceDate,
+        MIN(eml.LoginTime) AS InTime
+    FROM dbo.EmployeeManualLogins eml
+    INNER JOIN EmployeeBase eb
+        ON LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(CAST(eb.Id AS NVARCHAR(50))))
+        OR LTRIM(RTRIM(CAST(eml.EmployeeId AS NVARCHAR(50)))) = eb.EmployeeCode
+    WHERE CAST(eml.[Date] AS DATE) BETWEEN CAST(@FromDate AS DATE) AND CAST(@ToDate AS DATE)
+      AND eml.LoginTime IS NOT NULL
+    GROUP BY eb.Id, CAST(eml.[Date] AS DATE)
+),
+AttendanceBase AS
+(
+    SELECT
+        eb.Id,
+        eb.EmployeeName,
+        eb.EmployeeCode,
+        eb.Designation,
+        eb.Department,
+        dr.AttendanceDate,
+        CASE
+            WHEN ls.InTime IS NOT NULL THEN 1
+            ELSE 0
+        END AS IsPresent
+    FROM EmployeeBase eb
+    CROSS JOIN DateRange dr
+    LEFT JOIN LoginSummary ls
+        ON eb.Id = ls.EmployeeInternalId
+       AND dr.AttendanceDate = ls.AttendanceDate
+)
+SELECT
+    EmployeeName,
+    EmployeeCode,
+    Designation,
+    Department,
+    SUM(IsPresent) AS PresentCount,
+    COUNT(*) - SUM(IsPresent) AS AbsentCount
+FROM AttendanceBase
+GROUP BY EmployeeName, EmployeeCode, Designation, Department
+ORDER BY EmployeeCode
+OPTION (MAXRECURSION 1000);";
+
+                using (SqlCommand cmd = new SqlCommand(rowQuery, conn))
+                {
+                    cmd.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
+                    cmd.Parameters.Add("@Status", SqlDbType.Int).Value = status;
+                    cmd.Parameters.Add("@FromDate", SqlDbType.Date).Value = Convert.ToDateTime(fromDate).Date;
+                    cmd.Parameters.Add("@ToDate", SqlDbType.Date).Value = Convert.ToDateTime(toDate).Date;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            result.Rows.Add(new EmployeeJobCardAllReportRowDto
+                            {
+                                EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
+                                EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
+                                Designation = reader["Designation"] == DBNull.Value ? "" : reader["Designation"].ToString(),
+                                Department = reader["Department"] == DBNull.Value ? "" : reader["Department"].ToString(),
+                                Present = reader["PresentCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["PresentCount"]),
+                                Absent = reader["AbsentCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AbsentCount"])
+                            });
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         private string GetConnectionString(int serverId, string databaseName)

@@ -306,6 +306,8 @@
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
     <Compile Include="Models\DTOs\Reports\BranchDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardAllReportRowDto.cs" />
+    <Compile Include="Models\DTOs\Reports\EmployeeJobCardAllReportViewDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardDayDetailDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardDayDetailFilterDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardDetailDto.cs" />
@@ -514,6 +516,7 @@
     <Content Include="Views\AdminEmployeeJobCardReport\Parameter.cshtml" />
     <Content Include="Views\AdminEmployeeJobCardReport\ReportViewer.cshtml" />
     <Content Include="Views\AdminEmployeeJobCardReport\DayDetailReport.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\AllEmployeeHtmlReport.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

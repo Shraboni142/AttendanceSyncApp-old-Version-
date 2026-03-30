@@ -42,6 +42,7 @@ namespace AttendanceSyncApp.Controllers
 
             return View(employees);
         }
+
         [HttpGet]
         public JsonResult GetBranches(int serverId, string databaseName)
         {
@@ -55,6 +56,7 @@ namespace AttendanceSyncApp.Controllers
             var data = _service.GetEmployeesByBranchAndStatus(serverId, databaseName, branchId, status);
             return Json(data, JsonRequestBehavior.AllowGet);
         }
+
         [HttpPost]
         public ActionResult GenerateReport(EmployeeJobCardReportFilterDto model)
         {
@@ -101,6 +103,23 @@ namespace AttendanceSyncApp.Controllers
 
             ViewBag.ReportViewer = viewer;
             return View("ReportViewer");
+        }
+
+        [HttpPost]
+        public ActionResult GenerateAllEmployeeHtmlReport(EmployeeJobCardReportFilterDto model)
+        {
+            var viewModel = _service.GetAllEmployeeHtmlReport(
+                model.ServerId,
+                model.DatabaseName,
+                model.BranchId,
+                model.Status,
+                model.FromDate.ToString("dd-MM-yyyy"),
+                model.ToDate.ToString("dd-MM-yyyy"),
+                model.FromDate.ToString("yyyy-MM-dd"),
+                model.ToDate.ToString("yyyy-MM-dd")
+            );
+
+            return View("AllEmployeeHtmlReport", viewModel);
         }
     }
 }
