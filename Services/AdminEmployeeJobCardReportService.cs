@@ -133,6 +133,91 @@ namespace AttendanceSyncApp.Services
             return result;
         }
 
+        public List<BranchDropdownDto> GetBranches(int serverId, string databaseName)
+        {
+            var result = new List<BranchDropdownDto>();
+
+            string connString = GetConnectionString(serverId, databaseName);
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+
+                string query = @"
+            SELECT
+                Id,
+                BranchName
+            FROM dbo.Branches
+            ORDER BY BranchName";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        result.Add(new BranchDropdownDto
+                        {
+                            Id = Convert.ToInt32(reader["Id"]),
+                            BranchName = reader["BranchName"] == DBNull.Value ? "" : reader["BranchName"].ToString()
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public List<EmployeeDropdownDto> GetEmployeesByBranchAndStatus(int serverId, string databaseName, int branchId, int status)
+        {
+            var result = new List<EmployeeDropdownDto>();
+
+            string connString = GetConnectionString(serverId, databaseName);
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+
+                string query = @"
+            SELECT
+                Id,
+                EmployeeId,
+                LTRIM(RTRIM(
+                    ISNULL(FirstName, '') + ' ' +
+                    ISNULL(MiddleName, '') + ' ' +
+                    ISNULL(LastName, '')
+                )) AS EmployeeName
+            FROM dbo.Employees
+            WHERE BranchId = @BranchId
+              AND IsActive = @Status
+            ORDER BY EmployeeId";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.Add("@BranchId", SqlDbType.Int).Value = branchId;
+                    cmd.Parameters.Add("@Status", SqlDbType.Int).Value = status;
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var id = Convert.ToInt32(reader["Id"]);
+                            var employeeCode = reader["EmployeeId"] == DBNull.Value ? "" : reader["EmployeeId"].ToString();
+                            var employeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString();
+
+                            result.Add(new EmployeeDropdownDto
+                            {
+                                Id = id,
+                                EmployeeCode = employeeCode,
+                                EmployeeName = employeeName,
+                                DisplayText = employeeCode + " - " + employeeName
+                            });
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
         public List<string> GetDatabasesForServer(int serverId)
         {
             var databases = new List<string>();

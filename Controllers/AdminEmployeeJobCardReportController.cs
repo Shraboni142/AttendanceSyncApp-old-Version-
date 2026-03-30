@@ -42,7 +42,19 @@ namespace AttendanceSyncApp.Controllers
 
             return View(employees);
         }
+        [HttpGet]
+        public JsonResult GetBranches(int serverId, string databaseName)
+        {
+            var data = _service.GetBranches(serverId, databaseName);
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
 
+        [HttpGet]
+        public JsonResult GetEmployeesByBranchAndStatus(int serverId, string databaseName, int branchId, int status)
+        {
+            var data = _service.GetEmployeesByBranchAndStatus(serverId, databaseName, branchId, status);
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
         [HttpPost]
         public ActionResult GenerateReport(EmployeeJobCardReportFilterDto model)
         {

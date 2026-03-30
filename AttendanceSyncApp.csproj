@@ -304,6 +304,7 @@
     <Compile Include="Models\DTOs\BranchIssue\BranchIssueDtos.cs" />
     <Compile Include="Models\DTOs\ConcurrentSimulation\ConcurrentSimulationDtos.cs" />
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
+    <Compile Include="Models\DTOs\Reports\BranchDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardDayDetailDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardDayDetailFilterDto.cs" />

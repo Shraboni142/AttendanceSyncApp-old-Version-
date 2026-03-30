@@ -26,6 +26,11 @@ namespace AttendanceSyncApp.Services
 
             foreach (var db in databases)
             {
+                if (db != "Smart_v4_seba_Test")
+                {
+                    continue;
+                }
+
                 string connString =
                     $"Server={serverIp};Database={db};User Id={username};Password={password};Encrypt=False;TrustServerCertificate=True;";
 

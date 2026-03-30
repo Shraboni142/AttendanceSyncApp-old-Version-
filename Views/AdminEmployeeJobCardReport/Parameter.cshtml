@@ -1,11 +1,12 @@
 ﻿@model List<AttendanceSyncApp.Models.DTOs.Reports.EmployeeDropdownDto>
 
 <div style="text-align:right; margin-bottom:10px;">
-    <button onclick="history.back()"
+    <button type="button" onclick="history.back()"
             style="padding:6px 14px; background:#007bff; color:white; border:none; border-radius:4px;">
         ← Back
     </button>
 </div>
+
 <h2>Employee Job Card</h2>
 
 <form method="post" action="/AdminEmployeeJobCardReport/GenerateReport">
@@ -24,36 +25,100 @@
 
     <div style="margin-bottom:10px;">
         <label>Branch</label><br />
-        <select disabled>
-            <option>--Select--</option>
+        <select id="BranchId" name="BranchId" required>
+            <option value="">--Select--</option>
         </select>
     </div>
 
     <div style="margin-bottom:10px;">
         <label>Status</label><br />
-        <select disabled>
-            <option>Active</option>
+        <select id="Status" name="Status" required>
+            <option value="">--Select--</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
         </select>
     </div>
 
-    <!-- DEBUG: Model এ কয়টা employee এসেছে দেখাবে -->
-    <p>Total Employee: @(Model == null ? 0 : Model.Count)</p>
+    <p id="employeeCount">Total Employee: 0</p>
 
     <div style="margin-bottom:10px;">
         <label>Employee</label><br />
-        <select name="EmployeeId" required>
+        <select id="EmployeeId" name="EmployeeId" required>
             <option value="">--- Select ---</option>
-
-            @if (Model != null)
-            {
-                foreach (var item in Model)
-                {
-                    <option value="@item.Id">@item.DisplayText</option>
-                }
-            }
-
         </select>
     </div>
 
     <button type="submit">Generate Report</button>
 </form>
+
+<script src="~/Scripts/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var serverId = '@ViewBag.ServerId';
+        var databaseName = '@ViewBag.DatabaseName';
+
+        loadBranches();
+
+        $('#BranchId, #Status').change(function () {
+            loadEmployees();
+        });
+
+        function loadBranches() {
+            $.ajax({
+                url: '/AdminEmployeeJobCardReport/GetBranches',
+                type: 'GET',
+                data: {
+                    serverId: serverId,
+                    databaseName: databaseName
+                },
+                success: function (data) {
+                    var branchDropdown = $('#BranchId');
+                    branchDropdown.empty();
+                    branchDropdown.append('<option value="">--Select--</option>');
+
+                    $.each(data, function (i, item) {
+                        branchDropdown.append('<option value="' + item.Id + '">' + item.BranchName + '</option>');
+                    });
+                },
+                error: function () {
+                    alert('Branch load failed.');
+                }
+            });
+        }
+
+        function loadEmployees() {
+            var branchId = $('#BranchId').val();
+            var status = $('#Status').val();
+
+            var employeeDropdown = $('#EmployeeId');
+            employeeDropdown.empty();
+            employeeDropdown.append('<option value="">--- Select ---</option>');
+            $('#employeeCount').text('Total Employee: 0');
+
+            if (branchId === '' || status === '') {
+                return;
+            }
+
+            $.ajax({
+                url: '/AdminEmployeeJobCardReport/GetEmployeesByBranchAndStatus',
+                type: 'GET',
+                data: {
+                    serverId: serverId,
+                    databaseName: databaseName,
+                    branchId: branchId,
+                    status: status
+                },
+                success: function (data) {
+                    $.each(data, function (i, item) {
+                        employeeDropdown.append('<option value="' + item.Id + '">' + item.DisplayText + '</option>');
+                    });
+
+                    $('#employeeCount').text('Total Employee: ' + data.length);
+                },
+                error: function () {
+                    alert('Employee load failed.');
+                }
+            });
+        }
+    });
+</script>
