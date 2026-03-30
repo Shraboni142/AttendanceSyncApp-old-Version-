@@ -516,22 +516,27 @@ WHERE e.Id = @EmployeeId;";
         }
 
         public EmployeeJobCardAllReportViewDto GetAllEmployeeHtmlReport(
-            int serverId,
-            string databaseName,
-            int branchId,
-            int status,
-            string fromDateText,
-            string toDateText,
-            string fromDate,
-            string toDate)
+    int serverId,
+    string databaseName,
+    int branchId,
+    int status,
+    string fromDateText,
+    string toDateText,
+    string fromDate,
+    string toDate)
         {
             var result = new EmployeeJobCardAllReportViewDto
             {
+                ServerId = serverId,
+                DatabaseName = databaseName,
+                BranchId = branchId,
+                Status = status,
                 ReportTitle = "Employee Job Card Report",
                 FromDateText = fromDateText,
-                ToDateText = toDateText
+                ToDateText = toDateText,
+                FromDate = Convert.ToDateTime(fromDate).Date,
+                ToDate = Convert.ToDateTime(toDate).Date
             };
-
             string connString = GetConnectionString(serverId, databaseName);
 
             using (SqlConnection conn = new SqlConnection(connString))
@@ -621,6 +626,7 @@ AttendanceBase AS
        AND dr.AttendanceDate = ls.AttendanceDate
 )
 SELECT
+    Id AS EmployeeId,
     EmployeeName,
     EmployeeCode,
     Designation,
@@ -628,7 +634,7 @@ SELECT
     SUM(IsPresent) AS PresentCount,
     COUNT(*) - SUM(IsPresent) AS AbsentCount
 FROM AttendanceBase
-GROUP BY EmployeeName, EmployeeCode, Designation, Department
+GROUP BY Id, EmployeeName, EmployeeCode, Designation, Department
 ORDER BY EmployeeCode
 OPTION (MAXRECURSION 1000);";
 
@@ -645,6 +651,7 @@ OPTION (MAXRECURSION 1000);";
                         {
                             result.Rows.Add(new EmployeeJobCardAllReportRowDto
                             {
+                                EmployeeId = reader["EmployeeId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["EmployeeId"]),
                                 EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
                                 EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
                                 Designation = reader["Designation"] == DBNull.Value ? "" : reader["Designation"].ToString(),
@@ -659,7 +666,6 @@ OPTION (MAXRECURSION 1000);";
 
             return result;
         }
-
         private string GetConnectionString(int serverId, string databaseName)
         {
             using (var unitOfWork = new AuthUnitOfWork())

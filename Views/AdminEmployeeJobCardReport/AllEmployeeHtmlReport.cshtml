@@ -16,6 +16,62 @@
             color: #000;
         }
 
+        .top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-back {
+            background: #007bff;
+        }
+
+        .btn-download {
+            background: #28a745;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            min-width: 140px;
+            background: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 999;
+        }
+
+            .dropdown-menu a {
+                display: block;
+                padding: 10px 12px;
+                color: #000;
+                text-decoration: none;
+            }
+
+                .dropdown-menu a:hover {
+                    background: #f2f2f2;
+                }
+
+        .dropdown.show .dropdown-menu {
+            display: block;
+        }
+
         .report-header {
             text-align: center;
             margin-bottom: 30px;
@@ -65,9 +121,41 @@
             text-align: center;
             font-weight: 600;
         }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
+        }
+
+        .inline-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
+    <div class="top-actions">
+        <button type="button" class="btn btn-back" onclick="history.back()">← Back</button>
+
+        <div class="dropdown" id="downloadDropdown">
+            <button type="button" class="btn btn-download" onclick="toggleDownloadMenu()">Download ▼</button>
+            <div class="dropdown-menu">
+                <a href="/AdminEmployeeJobCardReport/DownloadAllEmployeeHtmlReportExcel?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")">
+                    Excel
+                </a>
+                <a href="/AdminEmployeeJobCardReport/DownloadAllEmployeeHtmlReportPdf?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")">
+                    PDF
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div class="report-header">
         <h2>@Model.ReportTitle</h2>
         <p>@Model.CompanyName</p>
@@ -93,8 +181,30 @@
                 @foreach (var item in Model.Rows)
                 {
                     <tr>
-                        <td>@item.EmployeeName</td>
-                        <td>@item.EmployeeCode</td>
+                        <td>
+                            <form method="post" action="/AdminEmployeeJobCardReport/GenerateReport" class="inline-form">
+                                <input type="hidden" name="ServerId" value="@Model.ServerId" />
+                                <input type="hidden" name="DatabaseName" value="@Model.DatabaseName" />
+                                <input type="hidden" name="EmployeeId" value="@item.EmployeeId" />
+                                <input type="hidden" name="FromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="ToDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="BranchId" value="0" />
+                                <input type="hidden" name="Status" value="0" />
+                                <button type="submit" class="link-button">@item.EmployeeName</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form method="post" action="/AdminEmployeeJobCardReport/GenerateReport" class="inline-form">
+                                <input type="hidden" name="ServerId" value="@Model.ServerId" />
+                                <input type="hidden" name="DatabaseName" value="@Model.DatabaseName" />
+                                <input type="hidden" name="EmployeeId" value="@item.EmployeeId" />
+                                <input type="hidden" name="FromDate" value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="ToDate" value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="BranchId" value="0" />
+                                <input type="hidden" name="Status" value="0" />
+                                <button type="submit" class="link-button">@item.EmployeeCode</button>
+                            </form>
+                        </td>
                         <td>@item.Designation</td>
                         <td>@item.Department</td>
                         <td class="text-center">@item.Present</td>
@@ -108,5 +218,20 @@
     {
         <div class="no-data">No employee data found for the selected branch, status, and date range.</div>
     }
+
+    <script>
+        function toggleDownloadMenu() {
+            document.getElementById('downloadDropdown').classList.toggle('show');
+        }
+
+        window.onclick = function (event) {
+            if (!event.target.matches('.btn-download')) {
+                var dropdown = document.getElementById('downloadDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
+                }
+            }
+        };
+    </script>
 </body>
 </html>
