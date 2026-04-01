@@ -1,0 +1,138 @@
+﻿@model AttendanceSyncApp.Models.DTOs.Reports.EmployeeJobCardAllReportViewDto
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Employee Job Card Report - Excel Preview</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            margin: 30px;
+            color: #000;
+        }
+
+        .top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-back {
+            background: #007bff;
+        }
+
+        .btn-download {
+            background: #28a745;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+            .report-header h2 {
+                margin: 0 0 10px 0;
+                font-size: 34px;
+                font-weight: 700;
+            }
+
+            .report-header p {
+                margin: 6px 0;
+                font-size: 16px;
+            }
+
+        .date-range {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        th, td {
+            border: 1px solid #bfbfbf;
+            padding: 10px 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f2f2f2;
+            font-weight: 700;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .sheet-wrap {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-actions">
+        <button type="button" class="btn btn-back" onclick="history.back()">← Back</button>
+
+        <a class="btn btn-download"
+           href="/AdminEmployeeJobCardReport/DownloadAllEmployeeHtmlReportExcel?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")">
+            ⬇ Download Excel
+        </a>
+    </div>
+
+    <div class="report-header">
+        <h2>@Model.ReportTitle</h2>
+        <p>@Model.CompanyName</p>
+        <p>@Model.Address</p>
+        <p>Phone: @Model.Phone, Fax: @Model.Fax, Email: @Model.Email</p>
+        <p class="date-range">From @Model.FromDateText to @Model.ToDateText</p>
+    </div>
+
+    <div class="sheet-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Employee Name</th>
+                    <th>Employee Code</th>
+                    <th>Designation</th>
+                    <th>Department</th>
+                    <th class="text-center">Present</th>
+                    <th class="text-center">Absent</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Rows)
+                {
+                    <tr>
+                        <td>@item.EmployeeName</td>
+                        <td>@item.EmployeeCode</td>
+                        <td>@item.Designation</td>
+                        <td>@item.Department</td>
+                        <td class="text-center">@item.Present</td>
+                        <td class="text-center">@item.Absent</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

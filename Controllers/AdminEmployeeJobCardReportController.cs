@@ -269,5 +269,109 @@ namespace AttendanceSyncApp.Controllers
                 return File(ms.ToArray(), "application/pdf", "EmployeeJobCardReport.pdf");
             }
         }
+        [HttpGet]
+        public ActionResult PreviewAllEmployeeHtmlReportExcel(
+    int serverId,
+    string databaseName,
+    int branchId,
+    int status,
+    DateTime fromDate,
+    DateTime toDate)
+        {
+            var model = _service.GetAllEmployeeHtmlReport(
+                serverId,
+                databaseName,
+                branchId,
+                status,
+                fromDate.ToString("dd-MM-yyyy"),
+                toDate.ToString("dd-MM-yyyy"),
+                fromDate.ToString("yyyy-MM-dd"),
+                toDate.ToString("yyyy-MM-dd")
+            );
+
+            return View("AllEmployeeExcelPreview", model);
+        }
+
+        [HttpGet]
+        public ActionResult PreviewAllEmployeeHtmlReportPdf(
+            int serverId,
+            string databaseName,
+            int branchId,
+            int status,
+            DateTime fromDate,
+            DateTime toDate)
+        {
+            var model = _service.GetAllEmployeeHtmlReport(
+                serverId,
+                databaseName,
+                branchId,
+                status,
+                fromDate.ToString("dd-MM-yyyy"),
+                toDate.ToString("dd-MM-yyyy"),
+                fromDate.ToString("yyyy-MM-dd"),
+                toDate.ToString("yyyy-MM-dd")
+            );
+
+            using (var ms = new MemoryStream())
+            {
+                var document = new Document(PageSize.A4.Rotate(), 20f, 20f, 20f, 20f);
+                PdfWriter.GetInstance(document, ms);
+                document.Open();
+
+                var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 22);
+                var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 11);
+                var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11);
+
+                var title = new Paragraph("Employee Job Card Report", titleFont);
+                title.Alignment = Element.ALIGN_CENTER;
+                document.Add(title);
+
+                var company = new Paragraph(model.CompanyName ?? "", normalFont);
+                company.Alignment = Element.ALIGN_CENTER;
+                document.Add(company);
+
+                var address = new Paragraph(model.Address ?? "", normalFont);
+                address.Alignment = Element.ALIGN_CENTER;
+                document.Add(address);
+
+                var contact = new Paragraph(
+                    "Phone: " + (model.Phone ?? "") + ", Fax: " + (model.Fax ?? "") + ", Email: " + (model.Email ?? ""),
+                    normalFont);
+                contact.Alignment = Element.ALIGN_CENTER;
+                document.Add(contact);
+
+                var dateRange = new Paragraph("From " + model.FromDateText + " to " + model.ToDateText, normalFont);
+                dateRange.Alignment = Element.ALIGN_CENTER;
+                dateRange.SpacingAfter = 15f;
+                document.Add(dateRange);
+
+                PdfPTable table = new PdfPTable(6);
+                table.WidthPercentage = 100;
+                table.SetWidths(new float[] { 28f, 14f, 16f, 20f, 11f, 11f });
+
+                table.AddCell(new PdfPCell(new Phrase("Employee Name", headerFont)));
+                table.AddCell(new PdfPCell(new Phrase("Employee Code", headerFont)));
+                table.AddCell(new PdfPCell(new Phrase("Designation", headerFont)));
+                table.AddCell(new PdfPCell(new Phrase("Department", headerFont)));
+                table.AddCell(new PdfPCell(new Phrase("Present", headerFont)) { HorizontalAlignment = Element.ALIGN_CENTER });
+                table.AddCell(new PdfPCell(new Phrase("Absent", headerFont)) { HorizontalAlignment = Element.ALIGN_CENTER });
+
+                foreach (var item in model.Rows)
+                {
+                    table.AddCell(new PdfPCell(new Phrase(item.EmployeeName ?? "", normalFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.EmployeeCode ?? "", normalFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.Designation ?? "", normalFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.Department ?? "", normalFont)));
+                    table.AddCell(new PdfPCell(new Phrase(item.Present.ToString(), normalFont)) { HorizontalAlignment = Element.ALIGN_CENTER });
+                    table.AddCell(new PdfPCell(new Phrase(item.Absent.ToString(), normalFont)) { HorizontalAlignment = Element.ALIGN_CENTER });
+                }
+
+                document.Add(table);
+                document.Close();
+
+                Response.AddHeader("Content-Disposition", "inline; filename=EmployeeJobCardReport.pdf");
+                return File(ms.ToArray(), "application/pdf");
+            }
+        }
     }
 }

@@ -146,10 +146,10 @@
         <div class="dropdown" id="downloadDropdown">
             <button type="button" class="btn btn-download" onclick="toggleDownloadMenu()">Download ▼</button>
             <div class="dropdown-menu">
-                <a href="/AdminEmployeeJobCardReport/DownloadAllEmployeeHtmlReportExcel?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")">
+                <a href="/AdminEmployeeJobCardReport/PreviewAllEmployeeHtmlReportExcel?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")" target="_blank">
                     Excel
                 </a>
-                <a href="/AdminEmployeeJobCardReport/DownloadAllEmployeeHtmlReportPdf?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")">
+                <a href="/AdminEmployeeJobCardReport/PreviewAllEmployeeHtmlReportPdf?serverId=@Model.ServerId&databaseName=@Model.DatabaseName&branchId=@Model.BranchId&status=@Model.Status&fromDate=@Model.FromDate.ToString("yyyy-MM-dd")&toDate=@Model.ToDate.ToString("yyyy-MM-dd")" target="_blank">
                     PDF
                 </a>
             </div>

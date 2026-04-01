@@ -1,180 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Report xmlns="http://schemas.microsoft.com/sqlserver/reporting/2008/01/reportdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
-	<DataSources>
-		<DataSource Name="DataSet1">
-			<ConnectionProperties>
-				<DataProvider>System.Data.DataSet</DataProvider>
-				<ConnectString />
-			</ConnectionProperties>
-			<rd:DataSourceID>8f6f0b2a-3f70-4f87-8d79-111111111111</rd:DataSourceID>
-		</DataSource>
-	</DataSources>
-
-	<DataSets>
-		<DataSet Name="HeaderDataSet">
-			<Fields>
-				<Field Name="CompanyName">
-					<DataField>CompanyName</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Address">
-					<DataField>Address</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="ReportTitle">
-					<DataField>ReportTitle</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="DateRange">
-					<DataField>DateRange</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="EmployeeCode">
-					<DataField>EmployeeCode</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="EmployeeName">
-					<DataField>EmployeeName</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Designation">
-					<DataField>Designation</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Department">
-					<DataField>Department</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="DOJ">
-					<DataField>DOJ</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Section">
-					<DataField>Section</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Branch">
-					<DataField>Branch</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Location">
-					<DataField>Location</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Phone">
-  <DataField>Phone</DataField>
-  <rd:TypeName>System.String</rd:TypeName>
-</Field>
-<Field Name="Fax">
-  <DataField>Fax</DataField>
-  <rd:TypeName>System.String</rd:TypeName>
-</Field>
-<Field Name="Email">
-  <DataField>Email</DataField>
-  <rd:TypeName>System.String</rd:TypeName>
-</Field>
-<Field Name="FromDateText">
-  <DataField>FromDateText</DataField>
-  <rd:TypeName>System.String</rd:TypeName>
-</Field>
-<Field Name="ToDateText">
-  <DataField>ToDateText</DataField>
-  <rd:TypeName>System.String</rd:TypeName>
-</Field>
-			</Fields>
-			<Query>
-				<DataSourceName>DataSet1</DataSourceName>
-				<CommandText />
-			</Query>
-		</DataSet>
-
-		<DataSet Name="DetailDataSet">
-			<Fields>
-				<Field Name="Date">
-					<DataField>Date</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Shift">
-					<DataField>Shift</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="InTime">
-					<DataField>InTime</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="OutTime">
-					<DataField>OutTime</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="LateMinutes">
-					<DataField>LateMinutes</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="OTHours">
-					<DataField>OTHours</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="DayStatus">
-					<DataField>DayStatus</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="Remarks">
-					<DataField>Remarks</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-			</Fields>
-			<Query>
-				<DataSourceName>DataSet1</DataSourceName>
-				<CommandText />
-			</Query>
-		</DataSet>
-
-		<DataSet Name="SummaryDataSet">
-			<Fields>
-				<Field Name="TotalDays">
-					<DataField>TotalDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalWeekendDays">
-					<DataField>TotalWeekendDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalPresentDays">
-					<DataField>TotalPresentDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalWorkingDays">
-					<DataField>TotalWorkingDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalAbsentDays">
-					<DataField>TotalAbsentDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalLateDays">
-					<DataField>TotalLateDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalHolidays">
-					<DataField>TotalHolidays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalLeaveDays">
-					<DataField>TotalLeaveDays</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-				<Field Name="TotalAttendance">
-					<DataField>TotalAttendance</DataField>
-					<rd:TypeName>System.String</rd:TypeName>
-				</Field>
-			</Fields>
-			<Query>
-				<DataSourceName>DataSet1</DataSourceName>
-				<CommandText />
-			</Query>
-		</DataSet>
-	</DataSets>
-	<Body>
+  <Body>
     <ReportItems>
       <Textbox Name="Textbox23">
         <CanGrow>true</CanGrow>
@@ -249,7 +75,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-				  <Value>=First(Fields!Address.Value, "HeaderDataSet")</Value>
+                <Value>=First(Fields!Address.Value, "HeaderDataSet")</Value>
                 <Style />
               </TextRun>
             </TextRuns>
@@ -281,7 +107,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-				  <Value>="Phone: " &amp; First(Fields!Phone.Value, "HeaderDataSet") &amp; ", Fax: " &amp; First(Fields!Fax.Value, "HeaderDataSet") &amp; ", Email: " &amp; First(Fields!Email.Value, "HeaderDataSet")</Value>
+                <Value>="Phone: " &amp; First(Fields!Phone.Value, "HeaderDataSet") &amp; ", Fax: " &amp; First(Fields!Fax.Value, "HeaderDataSet") &amp; ", Email: " &amp; First(Fields!Email.Value, "HeaderDataSet")</Value>
                 <Style />
               </TextRun>
             </TextRuns>
@@ -313,7 +139,7 @@
           <Paragraph>
             <TextRuns>
               <TextRun>
-				  <Value>="From " &amp; First(Fields!FromDateText.Value, "HeaderDataSet") &amp; " to " &amp; First(Fields!ToDateText.Value, "HeaderDataSet")</Value>
+                <Value>="From " &amp; First(Fields!FromDateText.Value, "HeaderDataSet") &amp; " to " &amp; First(Fields!ToDateText.Value, "HeaderDataSet")</Value>
                 <Style />
               </TextRun>
             </TextRuns>
@@ -496,7 +322,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!EmployeeCode.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!EmployeeCode.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -526,7 +352,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!EmployeeName.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!EmployeeName.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -556,7 +382,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!Designation.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!Designation.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -586,7 +412,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!Department.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!Department.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -764,7 +590,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!DOJ.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!DOJ.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -793,9 +619,8 @@
             <Paragraphs>
               <Paragraph>
                 <TextRuns>
-				
                   <TextRun>
-					  <Value>=First(Fields!Section.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!Section.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -825,7 +650,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!Branch.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!Branch.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -855,7 +680,7 @@
               <Paragraph>
                 <TextRuns>
                   <TextRun>
-					  <Value>=First(Fields!Location.Value, "HeaderDataSet")</Value>
+                    <Value>=First(Fields!Location.Value, "HeaderDataSet")</Value>
                     <Style />
                   </TextRun>
                 </TextRuns>
@@ -1233,7 +1058,7 @@
                         <Paragraph>
                           <TextRuns>
                             <TextRun>
-								<Value>=Fields!Date.Value</Value>
+                              <Value>=Fields!Date.Value</Value>
                               <Style />
                             </TextRun>
                           </TextRuns>
@@ -1492,17 +1317,17 @@
             </TablixMember>
           </TablixMembers>
         </TablixRowHierarchy>
+        <DataSetName>DetailDataSet</DataSetName>
         <Top>10.35967cm</Top>
         <Left>1.64762cm</Left>
-        <Height>1.28819cm</Height>
-        <Width>20.59594cm</Width>
+        <Height>1.2882cm</Height>
+        <Width>20.59592cm</Width>
         <ZIndex>6</ZIndex>
         <Style>
           <Border>
             <Style>None</Style>
           </Border>
         </Style>
-		  <DataSetName>DetailDataSet</DataSetName>
       </Tablix>
       <Rectangle Name="Rectangle2">
         <ReportItems>
@@ -2104,6 +1929,177 @@
     <Style />
   </Page>
   <AutoRefresh>0</AutoRefresh>
+  <DataSources>
+    <DataSource Name="DataSet1">
+      <ConnectionProperties>
+        <DataProvider>System.Data.DataSet</DataProvider>
+        <ConnectString />
+      </ConnectionProperties>
+      <rd:DataSourceID>8f6f0b2a-3f70-4f87-8d79-111111111111</rd:DataSourceID>
+    </DataSource>
+  </DataSources>
+  <DataSets>
+    <DataSet Name="HeaderDataSet">
+      <Query>
+        <DataSourceName>DataSet1</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="CompanyName">
+          <DataField>CompanyName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Address">
+          <DataField>Address</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="ReportTitle">
+          <DataField>ReportTitle</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="DateRange">
+          <DataField>DateRange</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="EmployeeCode">
+          <DataField>EmployeeCode</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="EmployeeName">
+          <DataField>EmployeeName</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Designation">
+          <DataField>Designation</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Department">
+          <DataField>Department</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="DOJ">
+          <DataField>DOJ</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Section">
+          <DataField>Section</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Branch">
+          <DataField>Branch</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Location">
+          <DataField>Location</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Phone">
+          <DataField>Phone</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Fax">
+          <DataField>Fax</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Email">
+          <DataField>Email</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="FromDateText">
+          <DataField>FromDateText</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="ToDateText">
+          <DataField>ToDateText</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="DetailDataSet">
+      <Query>
+        <DataSourceName>DataSet1</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="Date">
+          <DataField>Date</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Shift">
+          <DataField>Shift</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="InTime">
+          <DataField>InTime</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="OutTime">
+          <DataField>OutTime</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="LateMinutes">
+          <DataField>LateMinutes</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="OTHours">
+          <DataField>OTHours</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="DayStatus">
+          <DataField>DayStatus</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="Remarks">
+          <DataField>Remarks</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+    <DataSet Name="SummaryDataSet">
+      <Query>
+        <DataSourceName>DataSet1</DataSourceName>
+        <CommandText />
+      </Query>
+      <Fields>
+        <Field Name="TotalDays">
+          <DataField>TotalDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalWeekendDays">
+          <DataField>TotalWeekendDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalPresentDays">
+          <DataField>TotalPresentDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalWorkingDays">
+          <DataField>TotalWorkingDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalAbsentDays">
+          <DataField>TotalAbsentDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalLateDays">
+          <DataField>TotalLateDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalHolidays">
+          <DataField>TotalHolidays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalLeaveDays">
+          <DataField>TotalLeaveDays</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+        <Field Name="TotalAttendance">
+          <DataField>TotalAttendance</DataField>
+          <rd:TypeName>System.String</rd:TypeName>
+        </Field>
+      </Fields>
+    </DataSet>
+  </DataSets>
   <rd:ReportUnitType>Cm</rd:ReportUnitType>
   <rd:ReportID>042207c1-7001-401b-ab77-d9c3afb5d1d7</rd:ReportID>
 </Report>

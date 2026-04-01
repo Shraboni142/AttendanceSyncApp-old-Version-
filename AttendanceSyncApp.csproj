@@ -175,6 +175,7 @@
     <Content Include="Scripts\Admin\Dashboard.js" />
     <Content Include="Scripts\Admin\DatabaseAssignments.js" />
     <Content Include="Scripts\Admin\DatabaseConfigurations.js" />
+    <Content Include="Scripts\Admin\EmployeeInformation.js" />
     <Content Include="Scripts\Admin\Employees.js" />
     <Content Include="Scripts\Admin\LoginSessions.js" />
     <Content Include="Scripts\Admin\SalaryGarbge\DatabaseAccess.js" />
@@ -236,6 +237,7 @@
     <Compile Include="Controllers\AdminDashboardController.cs" />
     <Compile Include="Controllers\AdminDatabaseAssignmentsController.cs" />
     <Compile Include="Controllers\AdminDatabaseConfigurationsController.cs" />
+    <Compile Include="Controllers\AdminEmployeeInformationController.cs" />
     <Compile Include="Controllers\AdminEmployeeJobCardReportController.cs" />
     <Compile Include="Controllers\AdminEmployeesController.cs" />
     <Compile Include="Controllers\AdminEmployeeStatusReportController.cs" />
@@ -325,6 +327,12 @@
     <Compile Include="Models\DTOs\Auth\UserDto.cs" />
     <Compile Include="Models\DTOs\BranchIssue\BranchIssueDtos.cs" />
     <Compile Include="Models\DTOs\ConcurrentSimulation\ConcurrentSimulationDtos.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EducationDropdownDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EducationFieldDropdownsDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeEducationDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoAddressDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoDropdownDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoGeneralDto.cs" />
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
     <Compile Include="Models\DTOs\Reports\BranchDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
@@ -416,6 +424,7 @@
     <Compile Include="Repositories\Sync\ToolRepository.cs" />
     <Compile Include="Repositories\Sync\CompanyRequestRepository.cs" />
     <Compile Include="Repositories\UnitOfWork.cs" />
+    <Compile Include="Services\AdminEmployeeInformationService.cs" />
     <Compile Include="Services\AdminEmployeeJobCardReportService.cs" />
     <Compile Include="Services\AdminEmployeeStatusReportService.cs" />
     <Compile Include="Services\Admin\AdminDatabaseAssignmentService.cs" />
@@ -457,6 +466,7 @@
     <Compile Include="Services\Interfaces\Auth\ISessionService.cs" />
     <Compile Include="Services\Interfaces\BranchIssue\IBranchIssueService.cs" />
     <Compile Include="Services\Interfaces\ConcurrentSimulation\IConcurrentSimulationService.cs" />
+    <Compile Include="Services\Interfaces\IAdminEmployeeInformationService.cs" />
     <Compile Include="Services\Interfaces\IAdminEmployeeJobCardReportService.cs" />
     <Compile Include="Services\Interfaces\IAdminEmployeeStatusReportService.cs" />
     <Compile Include="Services\Interfaces\ICompanyService.cs" />
@@ -539,6 +549,8 @@
     <Content Include="Views\AdminEmployeeJobCardReport\ReportViewer.cshtml" />
     <Content Include="Views\AdminEmployeeJobCardReport\DayDetailReport.cshtml" />
     <Content Include="Views\AdminEmployeeJobCardReport\AllEmployeeHtmlReport.cshtml" />
+    <Content Include="Views\AdminEmployeeJobCardReport\AllEmployeeExcelPreview.cshtml" />
+    <Content Include="Views\AdminEmployeeInformation\Index.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
