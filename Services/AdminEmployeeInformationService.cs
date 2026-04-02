@@ -305,22 +305,21 @@ namespace AttendanceSyncApp.Services
                 conn.Open();
 
                 string query = @"
-                    SELECT
-                        eu.Id,
-                        eu.EmployeeId,
-                        eu.EducationId,
-                        e.EducationName,
-                        eu.[Group],
-                        eu.Board,
-                        eu.AcademicYear,
-                        eu.AcademicInstitute,
-                        eu.Division,
-                        eu.Result
-                    FROM dbo.EducationUnits eu
-                    LEFT JOIN dbo.Educations e ON eu.EducationId = e.Id
-                    WHERE eu.EmployeeId = @EmployeeId
-                    ORDER BY eu.Id";
-
+    SELECT
+        eu.Id,
+        eu.EmployeeId,
+        eu.EducationId,
+        e.EducationName,
+        eu.[Group],
+        eu.Board,
+        eu.AcademicYear,
+        eu.AcademicInstitute,
+        eu.Division,
+        CAST(eu.CGPA AS NVARCHAR(100)) AS Result
+    FROM dbo.EducationUnits eu
+    LEFT JOIN dbo.Educations e ON eu.EducationId = e.Id
+    WHERE eu.EmployeeId = @EmployeeId
+    ORDER BY eu.Id";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
@@ -349,7 +348,69 @@ namespace AttendanceSyncApp.Services
 
             return result;
         }
+        public List<DropdownItemDto> GetDesignations()
+        {
+            var result = new List<DropdownItemDto>();
 
+            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+
+                string query = @"
+            SELECT Id, DesignationName
+            FROM dbo.Designations
+            WHERE DesignationName IS NOT NULL
+              AND LTRIM(RTRIM(DesignationName)) <> ''
+            ORDER BY DesignationName";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        result.Add(new DropdownItemDto
+                        {
+                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
+                            Name = reader["DesignationName"] != DBNull.Value ? reader["DesignationName"].ToString() : ""
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public List<DropdownItemDto> GetDepartments()
+        {
+            var result = new List<DropdownItemDto>();
+
+            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            {
+                conn.Open();
+
+                string query = @"
+            SELECT Id, DepartmentName
+            FROM dbo.Departments
+            WHERE DepartmentName IS NOT NULL
+              AND LTRIM(RTRIM(DepartmentName)) <> ''
+            ORDER BY DepartmentName";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        result.Add(new DropdownItemDto
+                        {
+                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
+                            Name = reader["DepartmentName"] != DBNull.Value ? reader["DepartmentName"].ToString() : ""
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
         public List<EducationDropdownDto> GetEducationDropdown()
         {
             var result = new List<EducationDropdownDto>();
@@ -393,12 +454,48 @@ namespace AttendanceSyncApp.Services
             {
                 conn.Open();
 
-                result.Groups = GetDistinctStringList(conn, "SELECT DISTINCT [Group] FROM dbo.EducationUnits WHERE [Group] IS NOT NULL AND LTRIM(RTRIM([Group])) <> '' ORDER BY [Group]");
-                result.Boards = GetDistinctStringList(conn, "SELECT DISTINCT Board FROM dbo.EducationUnits WHERE Board IS NOT NULL AND LTRIM(RTRIM(Board)) <> '' ORDER BY Board");
-                result.AcademicYears = GetDistinctStringList(conn, "SELECT DISTINCT AcademicYear FROM dbo.EducationUnits WHERE AcademicYear IS NOT NULL AND LTRIM(RTRIM(AcademicYear)) <> '' ORDER BY AcademicYear");
-                result.AcademicInstitutes = GetDistinctStringList(conn, "SELECT DISTINCT AcademicInstitute FROM dbo.EducationUnits WHERE AcademicInstitute IS NOT NULL AND LTRIM(RTRIM(AcademicInstitute)) <> '' ORDER BY AcademicInstitute");
-                result.Divisions = GetDistinctStringList(conn, "SELECT DISTINCT Division FROM dbo.EducationUnits WHERE Division IS NOT NULL AND LTRIM(RTRIM(Division)) <> '' ORDER BY Division");
-                result.Results = GetDistinctStringList(conn, "SELECT DISTINCT Result FROM dbo.EducationUnits WHERE Result IS NOT NULL AND LTRIM(RTRIM(Result)) <> '' ORDER BY Result");
+                result.Groups = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([Group] AS NVARCHAR(500)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [Group] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([Group] AS NVARCHAR(500)))) <> ''
+            ORDER BY Value");
+
+                result.Boards = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([Board] AS NVARCHAR(500)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [Board] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([Board] AS NVARCHAR(500)))) <> ''
+            ORDER BY Value");
+
+                result.AcademicYears = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([AcademicYear] AS NVARCHAR(500)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [AcademicYear] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([AcademicYear] AS NVARCHAR(500)))) <> ''
+              AND CAST([AcademicYear] AS NVARCHAR(500)) <> 'YYYY'
+            ORDER BY Value");
+
+                result.AcademicInstitutes = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([AcademicInstitute] AS NVARCHAR(1000)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [AcademicInstitute] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([AcademicInstitute] AS NVARCHAR(1000)))) <> ''
+            ORDER BY Value");
+
+                result.Divisions = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([Division] AS NVARCHAR(500)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [Division] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([Division] AS NVARCHAR(500)))) <> ''
+            ORDER BY Value");
+
+                result.Results = GetDistinctStringList(conn, @"
+            SELECT DISTINCT CAST([CGPA] AS NVARCHAR(100)) AS Value
+            FROM dbo.EducationUnits
+            WHERE [CGPA] IS NOT NULL
+              AND LTRIM(RTRIM(CAST([CGPA] AS NVARCHAR(100)))) <> ''
+            ORDER BY Value");
             }
 
             return result;
@@ -413,13 +510,20 @@ namespace AttendanceSyncApp.Services
             {
                 while (reader.Read())
                 {
-                    list.Add(reader[0].ToString());
+                    if (reader[0] != DBNull.Value)
+                    {
+                        var value = reader[0].ToString().Trim();
+
+                        if (!string.IsNullOrWhiteSpace(value) && !list.Contains(value))
+                        {
+                            list.Add(value);
+                        }
+                    }
                 }
             }
 
             return list;
         }
-
         public bool SaveEducation(EmployeeEducationDto dto)
         {
             using (SqlConnection conn = new SqlConnection(GetConnectionString()))

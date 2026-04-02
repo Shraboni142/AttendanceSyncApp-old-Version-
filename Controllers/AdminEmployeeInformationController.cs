@@ -66,6 +66,19 @@ namespace AttendanceSyncApp.Controllers
         {
             return Json(_service.GetEducationFieldDropdowns(), JsonRequestBehavior.AllowGet);
         }
+        [HttpGet]
+        public JsonResult GetDesignations()
+        {
+            var data = _service.GetDesignations();
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult GetDepartments()
+        {
+            var data = _service.GetDepartments();
+            return Json(data, JsonRequestBehavior.AllowGet);
+        }
         [HttpPost]
         public JsonResult SaveEducation(EmployeeEducationDto dto)
         {

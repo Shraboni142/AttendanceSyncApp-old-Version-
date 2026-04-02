@@ -1,0 +1,11 @@
+﻿using System.Collections.Generic;
+
+namespace AttendanceSyncApp.Models.DTOs.EmployeeInformation
+{
+    public class EmployeeProfileViewDto
+    {
+        public EmployeeProfileGeneralDto General { get; set; }
+        public EmployeeProfileAddressDto Address { get; set; }
+        public List<EmployeeProfileEducationDto> Educations { get; set; }
+    }
+}

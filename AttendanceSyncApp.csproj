@@ -197,6 +197,7 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <Content Include="README.md" />
+    <Content Include="Models\DTOs\using System.Collections.Generic%3b" />
     <None Include="Scripts\jquery-3.7.1.intellisense.js" />
     <Content Include="Scripts\BranchIssue\BranchIssue.js" />
     <Content Include="Scripts\BranchReprocess\BranchReprocess.js" />
@@ -327,6 +328,7 @@
     <Compile Include="Models\DTOs\Auth\UserDto.cs" />
     <Compile Include="Models\DTOs\BranchIssue\BranchIssueDtos.cs" />
     <Compile Include="Models\DTOs\ConcurrentSimulation\ConcurrentSimulationDtos.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\DropdownItemDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EducationDropdownDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EducationFieldDropdownsDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeEducationDto.cs" />

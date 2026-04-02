@@ -12,6 +12,8 @@ $(document).ready(function () {
     loadEmployees();
     loadEducationDropdown();
     loadEducationFieldDropdowns();
+    loadDesignations();
+    loadDepartments();
 
     $('#EmployeeCode').on('change', function () {
         var code = $(this).val();
@@ -83,7 +85,29 @@ function loadEducationFieldDropdowns() {
         educationFieldDropdowns = data || educationFieldDropdowns;
     });
 }
+function loadDesignations() {
+    $.get('/AdminEmployeeInformation/GetDesignations', function (data) {
+        var $dropdown = $('#DesignationName');
+        $dropdown.empty();
+        $dropdown.append('<option value="">-- Select Designation --</option>');
 
+        $.each(data, function (i, item) {
+            $dropdown.append('<option value="' + item.Name + '">' + item.Name + '</option>');
+        });
+    });
+}
+
+function loadDepartments() {
+    $.get('/AdminEmployeeInformation/GetDepartments', function (data) {
+        var $dropdown = $('#DepartmentName');
+        $dropdown.empty();
+        $dropdown.append('<option value="">-- Select Department --</option>');
+
+        $.each(data, function (i, item) {
+            $dropdown.append('<option value="' + item.Name + '">' + item.Name + '</option>');
+        });
+    });
+}
 function loadEmployeeGeneralInfo(code) {
     $.get('/AdminEmployeeInformation/GetEmployeeGeneralInfo', { employeeCode: code }, function (data) {
         if (!data) return;
@@ -139,7 +163,7 @@ function saveGeneralInfo() {
     var dto = {
         Id: $('#EmployeeDbId').val(),
         EmployeeCode: $('#EmployeeCode').val(),
-        EmployeeName: $('#EmployeeName option:selected').text(),
+        EmployeeName: $('#EmployeeName').val(),
         FatherName: $('#FatherName').val(),
         MotherName: $('#MotherName').val(),
         MobileNo: $('#MobileNo').val(),

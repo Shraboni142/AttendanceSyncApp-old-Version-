@@ -17,5 +17,7 @@ namespace AttendanceSyncApp.Services.Interfaces
         EducationFieldDropdownsDto GetEducationFieldDropdowns();
         bool SaveEducation(EmployeeEducationDto dto);
         bool DeleteEducation(int id);
+        List<DropdownItemDto> GetDesignations();
+        List<DropdownItemDto> GetDepartments();
     }
 }
