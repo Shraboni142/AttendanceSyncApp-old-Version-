@@ -16,21 +16,26 @@ $(document).ready(function () {
     loadDepartments();
 
     $('#EmployeeCode').on('change', function () {
-        var code = $(this).val();
+        var code = ($(this).val() || '').trim();
         if (!code) return;
 
-        $('#EmployeeName').val(code);
         loadEmployeeGeneralInfo(code);
         loadEmployeeAddressInfo(code);
     });
 
     $('#EmployeeName').on('change', function () {
-        var code = $(this).val();
-        if (!code) return;
+        var inputName = ($(this).val() || '').trim();
+        if (!inputName) return;
 
-        $('#EmployeeCode').val(code);
-        loadEmployeeGeneralInfo(code);
-        loadEmployeeAddressInfo(code);
+        var matchedEmployee = employeeList.find(function (x) {
+            return (x.EmployeeName || '').trim().toLowerCase() === inputName.toLowerCase();
+        });
+
+        if (!matchedEmployee) return;
+
+        $('#EmployeeCode').val(matchedEmployee.EmployeeCode);
+        loadEmployeeGeneralInfo(matchedEmployee.EmployeeCode);
+        loadEmployeeAddressInfo(matchedEmployee.EmployeeCode);
     });
 
     $('#btnSaveGeneral').on('click', function () {
@@ -62,14 +67,21 @@ $(document).ready(function () {
     });
 });
 
+let employeeList = [];
+
 function loadEmployees() {
     $.get('/AdminEmployeeInformation/GetEmployees', function (data) {
-        $('#EmployeeCode').empty().append('<option value="">-- Select Employee Code --</option>');
-        $('#EmployeeName').empty().append('<option value="">-- Select Employee Name --</option>');
+        employeeList = data || [];
 
-        $.each(data, function (i, item) {
-            $('#EmployeeCode').append('<option value="' + item.EmployeeCode + '">' + item.EmployeeCode + '</option>');
-            $('#EmployeeName').append('<option value="' + item.EmployeeCode + '">' + item.EmployeeName + '</option>');
+        var codeList = $('#employeeCodeList');
+        var nameList = $('#employeeNameList');
+
+        codeList.empty();
+        nameList.empty();
+
+        $.each(employeeList, function (i, item) {
+            codeList.append('<option value="' + htmlEncode(item.EmployeeCode) + '"></option>');
+            nameList.append('<option value="' + htmlEncode(item.EmployeeName) + '"></option>');
         });
     });
 }
@@ -114,7 +126,7 @@ function loadEmployeeGeneralInfo(code) {
 
         $('#EmployeeDbId').val(data.Id);
         $('#EmployeeCode').val(data.EmployeeCode);
-        $('#EmployeeName').val(data.EmployeeCode);
+        $('#EmployeeName').val(data.EmployeeName);
 
         $('#DesignationName').val(data.DesignationName);
         $('#FatherName').val(data.FatherName);
@@ -185,48 +197,56 @@ function saveGeneralInfo() {
 }
 
 function saveAddressInfo() {
-    var dto = {
-        PresentHouseVillageName: $('#PresentHouseVillageName').val(),
-        PresentHouseNo: $('#PresentHouseNo').val(),
-        PresentRoadNo: $('#PresentRoadNo').val(),
-        PresentBlock: $('#PresentBlock').val(),
-        PresentArea: $('#PresentArea').val(),
-        PresentSector: $('#PresentSector').val(),
-        PresentCountry: $('#PresentCountry').val(),
-        PresentDivision: $('#PresentDivision').val(),
-        PresentDistrict: $('#PresentDistrict').val(),
-        PresentThanaUpazilla: $('#PresentThanaUpazilla').val(),
-        PresentPostOffice: $('#PresentPostOffice').val(),
+    var employeeName = ($('#EmployeeName').val() || '').trim();
+    var employeeCode = ($('#EmployeeCode').val() || '').trim();
 
-        PermanentHouseVillageName: $('#PermanentHouseVillageName').val(),
-        PermanentHouseNo: $('#PermanentHouseNo').val(),
-        PermanentRoadNo: $('#PermanentRoadNo').val(),
-        PermanentBlock: $('#PermanentBlock').val(),
-        PermanentArea: $('#PermanentArea').val(),
-        PermanentSector: $('#PermanentSector').val(),
-        PermanentCountry: $('#PermanentCountry').val(),
-        PermanentDivision: $('#PermanentDivision').val(),
-        PermanentDistrict: $('#PermanentDistrict').val(),
-        PermanentThanaUpazilla: $('#PermanentThanaUpazilla').val(),
-        PermanentPostOffice: $('#PermanentPostOffice').val()
-    };
+    if (!employeeName || !employeeCode) {
+        alert('Please enter Employee Name and Employee Code first.');
+        return;
+    }
 
     $.ajax({
         url: '/AdminEmployeeInformation/UpdateEmployeeAddressInfo',
         type: 'POST',
         data: {
-            employeeId: $('#EmployeeDbId').val(),
-            dto: dto
+            employeeCode: employeeCode,
+
+            'dto.PresentHouseVillageName': $('#PresentHouseVillageName').val(),
+            'dto.PresentHouseNo': $('#PresentHouseNo').val(),
+            'dto.PresentRoadNo': $('#PresentRoadNo').val(),
+            'dto.PresentBlock': $('#PresentBlock').val(),
+            'dto.PresentArea': $('#PresentArea').val(),
+            'dto.PresentSector': $('#PresentSector').val(),
+            'dto.PresentCountry': $('#PresentCountry').val(),
+            'dto.PresentDivision': $('#PresentDivision').val(),
+            'dto.PresentDistrict': $('#PresentDistrict').val(),
+            'dto.PresentThanaUpazilla': $('#PresentThanaUpazilla').val(),
+            'dto.PresentPostOffice': $('#PresentPostOffice').val(),
+
+            'dto.PermanentHouseVillageName': $('#PermanentHouseVillageName').val(),
+            'dto.PermanentHouseNo': $('#PermanentHouseNo').val(),
+            'dto.PermanentRoadNo': $('#PermanentRoadNo').val(),
+            'dto.PermanentBlock': $('#PermanentBlock').val(),
+            'dto.PermanentArea': $('#PermanentArea').val(),
+            'dto.PermanentSector': $('#PermanentSector').val(),
+            'dto.PermanentCountry': $('#PermanentCountry').val(),
+            'dto.PermanentDivision': $('#PermanentDivision').val(),
+            'dto.PermanentDistrict': $('#PermanentDistrict').val(),
+            'dto.PermanentThanaUpazilla': $('#PermanentThanaUpazilla').val(),
+            'dto.PermanentPostOffice': $('#PermanentPostOffice').val()
         },
-        success: function () {
-            alert('Address information saved successfully.');
+        success: function (response) {
+            if (response && response.success) {
+                alert('Address information saved successfully.');
+            } else {
+                alert(response && response.message ? response.message : 'Address save failed.');
+            }
         },
-        error: function () {
-            alert('Address save failed.');
+        error: function (xhr) {
+            alert(xhr.responseText || 'Address save failed.');
         }
     });
 }
-
 function loadEmployeeEducations(employeeId) {
     $.get('/AdminEmployeeInformation/GetEmployeeEducations', { employeeId: employeeId }, function (data) {
         var tbody = $('#educationTable tbody');
@@ -296,32 +316,47 @@ function editEducationRow(btn) {
 
 function saveEducationRow(btn) {
     var row = $(btn).closest('tr');
+    var employeeName = ($('#EmployeeName').val() || '').trim();
+    var employeeCode = ($('#EmployeeCode').val() || '').trim();
 
-    var dto = {
-        Id: row.attr('data-id'),
-        EmployeeId: $('#EmployeeDbId').val(),
-        EducationId: row.find('.edu-id').val(),
-        Group: row.find('.edu-group').val(),
-        Board: row.find('.edu-board').val(),
-        AcademicYear: row.find('.edu-year').val(),
-        AcademicInstitute: row.find('.edu-institute').val(),
-        Division: row.find('.edu-division').val(),
-        Result: row.find('.edu-result').val()
-    };
+    if (!employeeName || !employeeCode) {
+        alert('Please enter Employee Name and Employee Code first.');
+        return;
+    }
 
     $.ajax({
         url: '/AdminEmployeeInformation/SaveEducation',
         type: 'POST',
-        data: dto,
-        success: function () {
-            loadEmployeeEducations($('#EmployeeDbId').val());
+        data: {
+            employeeCode: employeeCode,
+            'dto.Id': row.attr('data-id'),
+            'dto.EducationId': row.find('.edu-id').val(),
+            'dto.Group': row.find('.edu-group').val(),
+            'dto.Board': row.find('.edu-board').val(),
+            'dto.AcademicYear': row.find('.edu-year').val(),
+            'dto.AcademicInstitute': row.find('.edu-institute').val(),
+            'dto.Division': row.find('.edu-division').val(),
+            'dto.Result': row.find('.edu-result').val()
         },
-        error: function () {
-            alert('Education save failed.');
+        success: function (response) {
+            if (response && response.success) {
+                var dbId = $('#EmployeeDbId').val();
+                if (dbId) {
+                    loadEmployeeEducations(dbId);
+                }
+                alert('Education information saved successfully.');
+            } else {
+                alert(response && response.message ? response.message : 'Education save failed.');
+            }
+        },
+        error: function (xhr) {
+            alert(xhr.responseText || 'Education save failed.');
         }
     });
 }
-
+function htmlEncode(value) {
+    return $('<div/>').text(value || '').html();
+}
 function deleteEducationRow(id) {
     if (!confirm('Are you sure you want to delete this row?')) {
         return;

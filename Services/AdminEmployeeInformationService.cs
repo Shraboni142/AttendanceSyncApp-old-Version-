@@ -227,39 +227,39 @@ namespace AttendanceSyncApp.Services
             return data;
         }
 
-        public bool UpdateEmployeeAddressInfo(int employeeId, EmployeeInfoAddressDto dto)
+        public bool UpdateEmployeeAddressInfo(string employeeCode, EmployeeInfoAddressDto dto)
         {
             using (SqlConnection conn = new SqlConnection(GetConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-                    UPDATE dbo.Employees
-                    SET
-                        HouseName = @PresentHouseVillageName,
-                        HouseNo = @PresentHouseNo,
-                        RoadNo = @PresentRoadNo,
-                        Block = @PresentBlock,
-                        Area = @PresentArea,
-                        Sector = @PresentSector,
-                        CountryId = @PresentCountry,
-                        DivisionId = @PresentDivision,
-                        DistrictId = @PresentDistrict,
-                        ThanaId = @PresentThanaUpazilla,
-                        PostOfficeId = @PresentPostOffice,
+            UPDATE dbo.Employees
+            SET
+                HouseName = @PresentHouseVillageName,
+                HouseNo = @PresentHouseNo,
+                RoadNo = @PresentRoadNo,
+                Block = @PresentBlock,
+                Area = @PresentArea,
+                Sector = @PresentSector,
+                CountryId = @PresentCountry,
+                DivisionId = @PresentDivision,
+                DistrictId = @PresentDistrict,
+                ThanaId = @PresentThanaUpazilla,
+                PostOfficeId = @PresentPostOffice,
 
-                        PerHouseName = @PermanentHouseVillageName,
-                        PerHouseNo = @PermanentHouseNo,
-                        PerRoadNo = @PermanentRoadNo,
-                        PerBlock = @PermanentBlock,
-                        PerArea = @PermanentArea,
-                        PerSector = @PermanentSector,
-                        PerCountryId = @PermanentCountry,
-                        PerDivisionId = @PermanentDivision,
-                        PerDistrictId = @PermanentDistrict,
-                        PerThanaId = @PermanentThanaUpazilla,
-                        PerPostOfficeId = @PermanentPostOffice
-                    WHERE Id = @EmployeeId";
+                PerHouseName = @PermanentHouseVillageName,
+                PerHouseNo = @PermanentHouseNo,
+                PerRoadNo = @PermanentRoadNo,
+                PerBlock = @PermanentBlock,
+                PerArea = @PermanentArea,
+                PerSector = @PermanentSector,
+                PerCountryId = @PermanentCountry,
+                PerDivisionId = @PermanentDivision,
+                PerDistrictId = @PermanentDistrict,
+                PerThanaId = @PermanentThanaUpazilla,
+                PerPostOfficeId = @PermanentPostOffice
+            WHERE LTRIM(RTRIM(CAST(EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(@EmployeeCode))";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -287,9 +287,11 @@ namespace AttendanceSyncApp.Services
                     cmd.Parameters.AddWithValue("@PermanentThanaUpazilla", (object)dto.PermanentThanaUpazilla ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@PermanentPostOffice", (object)dto.PermanentPostOffice ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
 
                     cmd.ExecuteNonQuery();
+
+                   
                 }
             }
 
@@ -524,35 +526,55 @@ namespace AttendanceSyncApp.Services
 
             return list;
         }
-        public bool SaveEducation(EmployeeEducationDto dto)
+        public bool SaveEducation(string employeeCode, EmployeeEducationDto dto)
         {
             using (SqlConnection conn = new SqlConnection(GetConnectionString()))
             {
                 conn.Open();
+
+                int employeeId = 0;
+
+                string employeeQuery = @"
+            SELECT TOP 1 Id
+            FROM dbo.Employees
+            WHERE LTRIM(RTRIM(CAST(EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(@EmployeeCode))";
+
+                using (SqlCommand empCmd = new SqlCommand(employeeQuery, conn))
+                {
+                    empCmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
+
+                    object result = empCmd.ExecuteScalar();
+                    if (result == null || result == DBNull.Value)
+                    {
+                        throw new Exception("Employee code not found.");
+                    }
+
+                    employeeId = Convert.ToInt32(result);
+                }
 
                 string query;
 
                 if (dto.Id == 0)
                 {
                     query = @"
-                        INSERT INTO dbo.EducationUnits
-                        (EmployeeId, EducationId, [Group], Board, AcademicYear, AcademicInstitute, Division, Result)
-                        VALUES
-                        (@EmployeeId, @EducationId, @Group, @Board, @AcademicYear, @AcademicInstitute, @Division, @Result)";
+                INSERT INTO dbo.EducationUnits
+                (EmployeeId, EducationId, [Group], Board, AcademicYear, AcademicInstitute, Division, CGPA)
+                VALUES
+                (@EmployeeId, @EducationId, @Group, @Board, @AcademicYear, @AcademicInstitute, @Division, @Result)";
                 }
                 else
                 {
                     query = @"
-                        UPDATE dbo.EducationUnits
-                        SET
-                            EducationId = @EducationId,
-                            [Group] = @Group,
-                            Board = @Board,
-                            AcademicYear = @AcademicYear,
-                            AcademicInstitute = @AcademicInstitute,
-                            Division = @Division,
-                            Result = @Result
-                        WHERE Id = @Id";
+                UPDATE dbo.EducationUnits
+                SET
+                    EducationId = @EducationId,
+                    [Group] = @Group,
+                    Board = @Board,
+                    AcademicYear = @AcademicYear,
+                    AcademicInstitute = @AcademicInstitute,
+                    Division = @Division,
+                    CGPA = @Result
+                WHERE Id = @Id";
                 }
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -560,7 +582,7 @@ namespace AttendanceSyncApp.Services
                     if (dto.Id != 0)
                         cmd.Parameters.AddWithValue("@Id", dto.Id);
 
-                    cmd.Parameters.AddWithValue("@EmployeeId", dto.EmployeeId);
+                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
                     cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
                     cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Board", (object)dto.Board ?? DBNull.Value);

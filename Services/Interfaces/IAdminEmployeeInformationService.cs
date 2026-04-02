@@ -10,12 +10,12 @@ namespace AttendanceSyncApp.Services.Interfaces
         bool UpdateEmployeeGeneralInfo(EmployeeInfoGeneralDto dto);
 
         EmployeeInfoAddressDto GetEmployeeAddressInfo(string employeeCode);
-        bool UpdateEmployeeAddressInfo(int employeeId, EmployeeInfoAddressDto dto);
+        bool UpdateEmployeeAddressInfo(string employeeCode, EmployeeInfoAddressDto dto);
 
         List<EmployeeEducationDto> GetEmployeeEducations(int employeeId);
         List<EducationDropdownDto> GetEducationDropdown();
         EducationFieldDropdownsDto GetEducationFieldDropdowns();
-        bool SaveEducation(EmployeeEducationDto dto);
+        bool SaveEducation(string employeeCode, EmployeeEducationDto dto);
         bool DeleteEducation(int id);
         List<DropdownItemDto> GetDesignations();
         List<DropdownItemDto> GetDepartments();

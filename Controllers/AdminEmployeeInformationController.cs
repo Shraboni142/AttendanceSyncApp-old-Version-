@@ -1,7 +1,8 @@
-﻿using System.Web.Mvc;
-using AttendanceSyncApp.Models.DTOs.EmployeeInformation;
+﻿using AttendanceSyncApp.Models.DTOs.EmployeeInformation;
 using AttendanceSyncApp.Services;
 using AttendanceSyncApp.Services.Interfaces;
+using System;
+using System.Web.Mvc;
 
 namespace AttendanceSyncApp.Controllers
 {
@@ -44,9 +45,26 @@ namespace AttendanceSyncApp.Controllers
         }
 
         [HttpPost]
-        public JsonResult UpdateEmployeeAddressInfo(int employeeId, EmployeeInfoAddressDto dto)
+        public JsonResult UpdateEmployeeAddressInfo(string employeeCode, EmployeeInfoAddressDto dto)
         {
-            return Json(_service.UpdateEmployeeAddressInfo(employeeId, dto));
+            try
+            {
+                var success = _service.UpdateEmployeeAddressInfo(employeeCode, dto);
+
+                return Json(new
+                {
+                    success = success,
+                    message = success ? "Address saved successfully." : "Address save failed."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpGet]
@@ -80,11 +98,27 @@ namespace AttendanceSyncApp.Controllers
             return Json(data, JsonRequestBehavior.AllowGet);
         }
         [HttpPost]
-        public JsonResult SaveEducation(EmployeeEducationDto dto)
+        public JsonResult SaveEducation(string employeeCode, EmployeeEducationDto dto)
         {
-            return Json(_service.SaveEducation(dto));
-        }
+            try
+            {
+                var success = _service.SaveEducation(employeeCode, dto);
 
+                return Json(new
+                {
+                    success = success,
+                    message = success ? "Education saved successfully." : "Education save failed."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
         [HttpPost]
         public JsonResult DeleteEducation(int id)
         {
