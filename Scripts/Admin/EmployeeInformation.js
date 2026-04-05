@@ -321,6 +321,8 @@ function saveAllEmployeeInformation() {
         copyPresentToPermanent();
     }
 
+    var scrollPos = $(window).scrollTop();
+
     var payload = {
         GeneralInfo: {
             GeneralInfoId: parseInt($('#GeneralInfoId').val() || '0'),
@@ -372,15 +374,23 @@ function saveAllEmployeeInformation() {
         contentType: 'application/json; charset=utf-8',
         data: JSON.stringify(payload),
         success: function (response) {
+            $(window).scrollTop(scrollPos);
+
             if (response && response.success) {
                 alert(response.message || 'All employee information saved successfully.');
+
                 loadEmployeeGeneralInfo(employeeCode);
                 loadEmployeeAddressInfo(employeeCode);
+
+                setTimeout(function () {
+                    $(window).scrollTop(scrollPos);
+                }, 100);
             } else {
                 alert(response && response.message ? response.message : 'Save failed.');
             }
         },
         error: function (xhr) {
+            $(window).scrollTop(scrollPos);
             alert(xhr.responseText || 'Save failed.');
         }
     });

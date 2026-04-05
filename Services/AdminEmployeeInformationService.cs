@@ -207,36 +207,43 @@ END";
             {
                 conn.Open();
 
+                int generalInfoId = GetGeneralInfoIdByEmployeeCode(employeeCode, conn);
+
+                if (generalInfoId == 0)
+                {
+                    return new EmployeeInfoAddressDto();
+                }
+
                 string query = @"
-            SELECT TOP 1
-                PresentHouseVillageName,
-                PresentHouseNo,
-                PresentRoadNo,
-                PresentBlock,
-                PresentArea,
-                PresentSector,
-                PresentCountry,
-                PresentDivision,
-                PresentDistrict,
-                PresentThanaUpazilla,
-                PresentPostOffice,
-                PermanentHouseVillageName,
-                PermanentHouseNo,
-                PermanentRoadNo,
-                PermanentBlock,
-                PermanentArea,
-                PermanentSector,
-                PermanentCountry,
-                PermanentDivision,
-                PermanentDistrict,
-                PermanentThanaUpazilla,
-                PermanentPostOffice
-            FROM dbo.EmployeeInfoAddressInfos
-            WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))";
+        SELECT TOP 1
+            PresentHouseVillageName,
+            PresentHouseNo,
+            PresentRoadNo,
+            PresentBlock,
+            PresentArea,
+            PresentSector,
+            PresentCountry,
+            PresentDivision,
+            PresentDistrict,
+            PresentThanaUpazilla,
+            PresentPostOffice,
+            PermanentHouseVillageName,
+            PermanentHouseNo,
+            PermanentRoadNo,
+            PermanentBlock,
+            PermanentArea,
+            PermanentSector,
+            PermanentCountry,
+            PermanentDivision,
+            PermanentDistrict,
+            PermanentThanaUpazilla,
+            PermanentPostOffice
+        FROM dbo.EmployeeInfoAddressInfos
+        WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
+                    cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -275,29 +282,28 @@ END";
 
             return data ?? new EmployeeInfoAddressDto();
         }
-
         public bool UpdateEmployeeAddressInfo(string employeeCode, EmployeeInfoAddressDto dto)
         {
             using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
+                int generalInfoId = GetGeneralInfoIdByEmployeeCode(employeeCode, conn);
+
+                if (generalInfoId == 0)
+                {
+                    throw new Exception("General information not found for this employee code.");
+                }
+
                 string query = @"
-DECLARE @EmployeeInfoEmployeeId INT;
-
-SELECT TOP 1 @EmployeeInfoEmployeeId = Id
-FROM dbo.EmployeeInfoEmployees
-WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
-
 IF EXISTS (
     SELECT 1
     FROM dbo.EmployeeInfoAddressInfos
-    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+    WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
 )
 BEGIN
     UPDATE dbo.EmployeeInfoAddressInfos
     SET
-        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
         PresentHouseVillageName = @PresentHouseVillageName,
         PresentHouseNo = @PresentHouseNo,
         PresentRoadNo = @PresentRoadNo,
@@ -321,14 +327,13 @@ BEGIN
         PermanentThanaUpazilla = @PermanentThanaUpazilla,
         PermanentPostOffice = @PermanentPostOffice,
         UpdatedAt = GETDATE()
-    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+    WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
 END
 ELSE
 BEGIN
     INSERT INTO dbo.EmployeeInfoAddressInfos
     (
-        EmployeeInfoEmployeeId,
-        EmployeeCode,
+        EmployeeInfoGeneralInfoId,
         PresentHouseVillageName,
         PresentHouseNo,
         PresentRoadNo,
@@ -354,8 +359,7 @@ BEGIN
     )
     VALUES
     (
-        @EmployeeInfoEmployeeId,
-        @EmployeeCode,
+        @EmployeeInfoGeneralInfoId,
         @PresentHouseVillageName,
         @PresentHouseNo,
         @PresentRoadNo,
@@ -383,7 +387,7 @@ END";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+                    cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
 
                     cmd.Parameters.AddWithValue("@PresentHouseVillageName", (object)dto.PresentHouseVillageName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@PresentHouseNo", (object)dto.PresentHouseNo ?? DBNull.Value);
@@ -447,7 +451,6 @@ END";
                 string query = @"
         SELECT
             Id,
-            EmployeeCode,
             EducationId,
             EducationName,
             [Group],
@@ -686,13 +689,15 @@ END";
             {
                 conn.Open();
 
-                string query = @"
-DECLARE @EmployeeInfoEmployeeId INT;
-DECLARE @EducationLookupId INT;
+                int generalInfoId = GetGeneralInfoIdByEmployeeCode(employeeCode, conn);
 
-SELECT TOP 1 @EmployeeInfoEmployeeId = Id
-FROM dbo.EmployeeInfoEmployees
-WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+                if (generalInfoId == 0)
+                {
+                    throw new Exception("General information not found for this employee code.");
+                }
+
+                string query = @"
+DECLARE @EducationLookupId INT;
 
 SELECT TOP 1 @EducationLookupId = Id
 FROM dbo.EmployeeInfoEducations
@@ -707,12 +712,6 @@ BEGIN
     ORDER BY Id;
 END
 
-IF @EmployeeInfoEmployeeId IS NULL
-BEGIN
-    RAISERROR('Employee not found in EmployeeInfoEmployees.', 16, 1);
-    RETURN;
-END
-
 IF @EducationLookupId IS NULL
 BEGIN
     RAISERROR('Education lookup not found in EmployeeInfoEducations.', 16, 1);
@@ -723,8 +722,7 @@ IF @Id = 0
 BEGIN
     INSERT INTO dbo.EmployeeInfoEducationInfos
     (
-        EmployeeInfoEmployeeId,
-        EmployeeCode,
+        EmployeeInfoGeneralInfoId,
         EducationLookupId,
         EducationId,
         EducationName,
@@ -737,8 +735,7 @@ BEGIN
     )
     VALUES
     (
-        @EmployeeInfoEmployeeId,
-        @EmployeeCode,
+        @EmployeeInfoGeneralInfoId,
         @EducationLookupId,
         @EducationId,
         @EducationName,
@@ -754,8 +751,7 @@ ELSE
 BEGIN
     UPDATE dbo.EmployeeInfoEducationInfos
     SET
-        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
-        EmployeeCode = @EmployeeCode,
+        EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId,
         EducationLookupId = @EducationLookupId,
         EducationId = @EducationId,
         EducationName = @EducationName,
@@ -771,8 +767,8 @@ END";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
+                    cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
                     cmd.Parameters.AddWithValue("@Id", dto.Id);
-                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
                     cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
                     cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
@@ -987,12 +983,6 @@ END";
         private void SaveAddressInfoWithTransaction(int generalInfoId, string employeeCode, EmployeeInfoAddressDto dto, SqlConnection conn, SqlTransaction transaction)
         {
             string query = @"
-DECLARE @EmployeeInfoEmployeeId INT;
-
-SELECT TOP 1 @EmployeeInfoEmployeeId = EmployeeInfoEmployeeId
-FROM dbo.EmployeeInfoGeneralInfos
-WHERE Id = @EmployeeInfoGeneralInfoId;
-
 IF EXISTS (
     SELECT 1
     FROM dbo.EmployeeInfoAddressInfos
@@ -1001,8 +991,6 @@ IF EXISTS (
 BEGIN
     UPDATE dbo.EmployeeInfoAddressInfos
     SET
-        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
-        EmployeeCode = @EmployeeCode,
         PresentHouseVillageName = @PresentHouseVillageName,
         PresentHouseNo = @PresentHouseNo,
         PresentRoadNo = @PresentRoadNo,
@@ -1033,8 +1021,6 @@ BEGIN
     INSERT INTO dbo.EmployeeInfoAddressInfos
     (
         EmployeeInfoGeneralInfoId,
-        EmployeeInfoEmployeeId,
-        EmployeeCode,
         PresentHouseVillageName,
         PresentHouseNo,
         PresentRoadNo,
@@ -1061,8 +1047,6 @@ BEGIN
     VALUES
     (
         @EmployeeInfoGeneralInfoId,
-        @EmployeeInfoEmployeeId,
-        @EmployeeCode,
         @PresentHouseVillageName,
         @PresentHouseNo,
         @PresentRoadNo,
@@ -1091,7 +1075,6 @@ END";
             using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
             {
                 cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
-                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
 
                 cmd.Parameters.AddWithValue("@PresentHouseVillageName", (object)dto.PresentHouseVillageName ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@PresentHouseNo", (object)dto.PresentHouseNo ?? DBNull.Value);
@@ -1176,12 +1159,7 @@ END";
         private void SaveOrUpdateEducationRow(int generalInfoId, string employeeCode, EmployeeEducationDto dto, SqlConnection conn, SqlTransaction transaction)
         {
             string query = @"
-DECLARE @EmployeeInfoEmployeeId INT;
 DECLARE @EducationLookupId INT;
-
-SELECT TOP 1 @EmployeeInfoEmployeeId = EmployeeInfoEmployeeId
-FROM dbo.EmployeeInfoGeneralInfos
-WHERE Id = @EmployeeInfoGeneralInfoId;
 
 SELECT TOP 1 @EducationLookupId = Id
 FROM dbo.EmployeeInfoEducations
@@ -1196,19 +1174,11 @@ BEGIN
     ORDER BY Id;
 END
 
-IF @EmployeeInfoEmployeeId IS NULL
-BEGIN
-    RAISERROR('Employee not found from general master.', 16, 1);
-    RETURN;
-END
-
 IF @Id = 0
 BEGIN
     INSERT INTO dbo.EmployeeInfoEducationInfos
     (
         EmployeeInfoGeneralInfoId,
-        EmployeeInfoEmployeeId,
-        EmployeeCode,
         EducationLookupId,
         EducationId,
         EducationName,
@@ -1222,8 +1192,6 @@ BEGIN
     VALUES
     (
         @EmployeeInfoGeneralInfoId,
-        @EmployeeInfoEmployeeId,
-        @EmployeeCode,
         @EducationLookupId,
         @EducationId,
         @EducationName,
@@ -1240,8 +1208,6 @@ BEGIN
     UPDATE dbo.EmployeeInfoEducationInfos
     SET
         EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId,
-        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
-        EmployeeCode = @EmployeeCode,
         EducationLookupId = @EducationLookupId,
         EducationId = @EducationId,
         EducationName = @EducationName,
@@ -1259,7 +1225,6 @@ END";
             {
                 cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
                 cmd.Parameters.AddWithValue("@Id", dto.Id);
-                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
                 cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
                 cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
                 cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
@@ -1274,103 +1239,33 @@ END";
         }
         private void SaveEducationWithTransaction(string employeeCode, EmployeeEducationDto dto, SqlConnection conn, SqlTransaction transaction)
         {
-            string query = @"
-DECLARE @EmployeeInfoEmployeeId INT;
-DECLARE @EducationLookupId INT;
+            int generalInfoId = GetGeneralInfoIdByEmployeeCode(employeeCode, conn, transaction);
 
-SELECT TOP 1 @EmployeeInfoEmployeeId = Id
-FROM dbo.EmployeeInfoEmployees
-WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
-
-SELECT TOP 1 @EducationLookupId = Id
-FROM dbo.EmployeeInfoEducations
-WHERE
-    (SourceEducationId = @EducationId)
-    OR (LTRIM(RTRIM(EducationName)) = LTRIM(RTRIM(@EducationName)));
-
-IF @EducationLookupId IS NULL
-BEGIN
-    SELECT TOP 1 @EducationLookupId = Id
-    FROM dbo.EmployeeInfoEducations
-    ORDER BY Id;
-END
-
-IF @EmployeeInfoEmployeeId IS NULL
-BEGIN
-    RAISERROR('Employee not found in EmployeeInfoEmployees.', 16, 1);
-    RETURN;
-END
-
-IF @EducationLookupId IS NULL
-BEGIN
-    RAISERROR('Education lookup not found in EmployeeInfoEducations.', 16, 1);
-    RETURN;
-END
-
-IF @Id = 0
-BEGIN
-    INSERT INTO dbo.EmployeeInfoEducationInfos
-    (
-        EmployeeInfoEmployeeId,
-        EmployeeCode,
-        EducationLookupId,
-        EducationId,
-        EducationName,
-        [Group],
-        Board,
-        AcademicYear,
-        AcademicInstitute,
-        Division,
-        Result
-    )
-    VALUES
-    (
-        @EmployeeInfoEmployeeId,
-        @EmployeeCode,
-        @EducationLookupId,
-        @EducationId,
-        @EducationName,
-        @Group,
-        @Board,
-        @AcademicYear,
-        @AcademicInstitute,
-        @Division,
-        @Result
-    )
-END
-ELSE
-BEGIN
-    UPDATE dbo.EmployeeInfoEducationInfos
-    SET
-        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
-        EmployeeCode = @EmployeeCode,
-        EducationLookupId = @EducationLookupId,
-        EducationId = @EducationId,
-        EducationName = @EducationName,
-        [Group] = @Group,
-        Board = @Board,
-        AcademicYear = @AcademicYear,
-        AcademicInstitute = @AcademicInstitute,
-        Division = @Division,
-        Result = @Result,
-        UpdatedAt = GETDATE()
-    WHERE Id = @Id
-END";
-
-            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            if (generalInfoId == 0)
             {
-                cmd.Parameters.AddWithValue("@Id", dto.Id);
-                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
-                cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
-                cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Board", (object)dto.Board ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@AcademicYear", (object)dto.AcademicYear ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@AcademicInstitute", (object)dto.AcademicInstitute ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Division", (object)dto.Division ?? DBNull.Value);
-                cmd.Parameters.AddWithValue("@Result", (object)dto.Result ?? DBNull.Value);
+                throw new Exception("General information not found for this employee code.");
+            }
 
-                cmd.ExecuteNonQuery();
+            SaveOrUpdateEducationRow(generalInfoId, employeeCode, dto, conn, transaction);
+        }
+        private int GetGeneralInfoIdByEmployeeCode(string employeeCode, SqlConnection conn, SqlTransaction transaction = null)
+        {
+            string query = @"
+    SELECT TOP 1 Id
+    FROM dbo.EmployeeInfoGeneralInfos
+    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))";
+
+            using (SqlCommand cmd = transaction == null
+                ? new SqlCommand(query, conn)
+                : new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+
+                object result = cmd.ExecuteScalar();
+                if (result == null || result == DBNull.Value)
+                    return 0;
+
+                return Convert.ToInt32(result);
             }
         }
         private string GetEmployeeCodeById(int employeeId, SqlConnection conn)

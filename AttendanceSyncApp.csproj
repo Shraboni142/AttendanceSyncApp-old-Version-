@@ -359,6 +359,7 @@
     <Compile Include="Models\DTOs\Sync\SyncRequestDto.cs" />
     <Compile Include="Models\DTOs\Sync\UserCompanyDatabaseDto.cs" />
     <Compile Include="Models\DynamicDbContext.cs" />
+    <Compile Include="Models\Emp.cs" />
     <Compile Include="Models\SalaryGarbageRecord.cs" />
     <Compile Include="Models\SalaryGarbge\DatabaseAccess.cs" />
     <Compile Include="Models\SalaryGarbge\ServerIp.cs" />

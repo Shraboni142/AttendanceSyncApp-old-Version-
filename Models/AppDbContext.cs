@@ -55,6 +55,11 @@ namespace AttandanceSyncApp.Models
         public DbSet<SyncRequest> SyncRequests { get; set; }
 
 
+
+        //public DbSet<Emp> Emps { get; set; }
+        //public DbSet<EmpAddress> EmpAddresses { get; set; }
+        //public DbSet<EmpEducation> EmpEducations { get; set; }
+
         // =============================
         // MODEL CONFIGURATION
         // =============================
