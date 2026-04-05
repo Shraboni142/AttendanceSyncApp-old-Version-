@@ -119,10 +119,33 @@ namespace AttendanceSyncApp.Controllers
                 });
             }
         }
+
         [HttpPost]
         public JsonResult DeleteEducation(int id)
         {
             return Json(_service.DeleteEducation(id));
+        }
+        [HttpPost]
+        public JsonResult SaveAllEmployeeInformation(EmployeeFullInformationSaveDto dto)
+        {
+            try
+            {
+                var success = _service.SaveAllEmployeeInformation(dto);
+
+                return Json(new
+                {
+                    success = success,
+                    message = success ? "All employee information saved successfully." : "Save failed."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }

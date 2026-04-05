@@ -332,6 +332,7 @@
     <Compile Include="Models\DTOs\EmployeeInformation\EducationDropdownDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EducationFieldDropdownsDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeEducationDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeFullInformationSaveDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoAddressDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoDropdownDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoGeneralDto.cs" />

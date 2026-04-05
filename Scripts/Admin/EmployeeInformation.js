@@ -1,4 +1,5 @@
-﻿let educationDropdown = [];
+﻿alert('NEW JS LOADED');
+let educationDropdown = [];
 let educationFieldDropdowns = {
     Groups: [],
     Boards: [],
@@ -7,6 +8,9 @@ let educationFieldDropdowns = {
     Divisions: [],
     Results: []
 };
+
+let employeeList = [];
+let educationRows = [];
 
 $(document).ready(function () {
     loadEmployees();
@@ -38,36 +42,20 @@ $(document).ready(function () {
         loadEmployeeAddressInfo(matchedEmployee.EmployeeCode);
     });
 
-    $('#btnSaveGeneral').on('click', function () {
-        saveGeneralInfo();
-    });
-
-    $('#btnSaveAddress').on('click', function () {
-        saveAddressInfo();
-    });
-
     $('#btnAddEducationRow').on('click', function () {
         addEducationRow();
     });
 
+    $('#btnSaveAllEmployeeInformation').on('click', function () {
+        saveAllEmployeeInformation();
+    });
+
     $('#SameAsPresent').on('change', function () {
         if ($(this).is(':checked')) {
-            $('#PermanentHouseVillageName').val($('#PresentHouseVillageName').val());
-            $('#PermanentHouseNo').val($('#PresentHouseNo').val());
-            $('#PermanentRoadNo').val($('#PresentRoadNo').val());
-            $('#PermanentBlock').val($('#PresentBlock').val());
-            $('#PermanentArea').val($('#PresentArea').val());
-            $('#PermanentSector').val($('#PresentSector').val());
-            $('#PermanentCountry').val($('#PresentCountry').val());
-            $('#PermanentDivision').val($('#PresentDivision').val());
-            $('#PermanentDistrict').val($('#PresentDistrict').val());
-            $('#PermanentThanaUpazilla').val($('#PresentThanaUpazilla').val());
-            $('#PermanentPostOffice').val($('#PresentPostOffice').val());
+            copyPresentToPermanent();
         }
     });
 });
-
-let employeeList = [];
 
 function loadEmployees() {
     $.get('/AdminEmployeeInformation/GetEmployees', function (data) {
@@ -76,12 +64,16 @@ function loadEmployees() {
         var codeList = $('#employeeCodeList');
         var nameList = $('#employeeNameList');
 
-        codeList.empty();
-        nameList.empty();
+        if (codeList.length) codeList.empty();
+        if (nameList.length) nameList.empty();
 
         $.each(employeeList, function (i, item) {
-            codeList.append('<option value="' + htmlEncode(item.EmployeeCode) + '"></option>');
-            nameList.append('<option value="' + htmlEncode(item.EmployeeName) + '"></option>');
+            if (codeList.length) {
+                codeList.append('<option value="' + htmlEncode(item.EmployeeCode) + '"></option>');
+            }
+            if (nameList.length) {
+                nameList.append('<option value="' + htmlEncode(item.EmployeeName) + '"></option>');
+            }
         });
     });
 }
@@ -97,14 +89,15 @@ function loadEducationFieldDropdowns() {
         educationFieldDropdowns = data || educationFieldDropdowns;
     });
 }
+
 function loadDesignations() {
     $.get('/AdminEmployeeInformation/GetDesignations', function (data) {
         var $dropdown = $('#DesignationName');
         $dropdown.empty();
         $dropdown.append('<option value="">-- Select Designation --</option>');
 
-        $.each(data, function (i, item) {
-            $dropdown.append('<option value="' + item.Name + '">' + item.Name + '</option>');
+        $.each(data || [], function (i, item) {
+            $dropdown.append('<option value="' + item.Id + '">' + htmlEncode(item.Name) + '</option>');
         });
     });
 }
@@ -115,27 +108,30 @@ function loadDepartments() {
         $dropdown.empty();
         $dropdown.append('<option value="">-- Select Department --</option>');
 
-        $.each(data, function (i, item) {
-            $dropdown.append('<option value="' + item.Name + '">' + item.Name + '</option>');
+        $.each(data || [], function (i, item) {
+            $dropdown.append('<option value="' + item.Id + '">' + htmlEncode(item.Name) + '</option>');
         });
     });
 }
+
 function loadEmployeeGeneralInfo(code) {
     $.get('/AdminEmployeeInformation/GetEmployeeGeneralInfo', { employeeCode: code }, function (data) {
         if (!data) return;
 
-        $('#EmployeeDbId').val(data.Id);
-        $('#EmployeeCode').val(data.EmployeeCode);
-        $('#EmployeeName').val(data.EmployeeName);
+        $('#EmployeeDbId').val(data.Id || 0);
+        $('#GeneralInfoId').val(data.GeneralInfoId || 0);
 
-        $('#DesignationName').val(data.DesignationName);
-        $('#FatherName').val(data.FatherName);
-        $('#MotherName').val(data.MotherName);
-        $('#MobileNo').val(data.MobileNo);
-        $('#DepartmentName').val(data.DepartmentName);
-        $('#BranchName').val(data.BranchName);
-        $('#BasicSalary').val(data.BasicSalary);
-        $('#DateOfBirth').val(data.DateOfBirth);
+        $('#EmployeeCode').val(data.EmployeeCode || '');
+        $('#EmployeeName').val(data.EmployeeName || '');
+        $('#FatherName').val(data.FatherName || '');
+        $('#MotherName').val(data.MotherName || '');
+        $('#MobileNo').val(data.MobileNo || '');
+        $('#BranchName').val(data.BranchName || '');
+        $('#BasicSalary').val(data.BasicSalary || '');
+        $('#DateOfBirth').val(data.DateOfBirth || '');
+
+        $('#DesignationName').val(data.DesignationId || '');
+        $('#DepartmentName').val(data.DepartmentId || '');
 
         loadEmployeeEducations(data.Id);
     });
@@ -145,177 +141,174 @@ function loadEmployeeAddressInfo(code) {
     $.get('/AdminEmployeeInformation/GetEmployeeAddressInfo', { employeeCode: code }, function (data) {
         if (!data) return;
 
-        $('#PresentHouseVillageName').val(data.PresentHouseVillageName);
-        $('#PresentHouseNo').val(data.PresentHouseNo);
-        $('#PresentRoadNo').val(data.PresentRoadNo);
-        $('#PresentBlock').val(data.PresentBlock);
-        $('#PresentArea').val(data.PresentArea);
-        $('#PresentSector').val(data.PresentSector);
-        $('#PresentCountry').val(data.PresentCountry);
-        $('#PresentDivision').val(data.PresentDivision);
-        $('#PresentDistrict').val(data.PresentDistrict);
-        $('#PresentThanaUpazilla').val(data.PresentThanaUpazilla);
-        $('#PresentPostOffice').val(data.PresentPostOffice);
+        $('#PresentHouseVillageName').val(data.PresentHouseVillageName || '');
+        $('#PresentHouseNo').val(data.PresentHouseNo || '');
+        $('#PresentRoadNo').val(data.PresentRoadNo || '');
+        $('#PresentBlock').val(data.PresentBlock || '');
+        $('#PresentArea').val(data.PresentArea || '');
+        $('#PresentSector').val(data.PresentSector || '');
+        $('#PresentCountry').val(data.PresentCountry || '');
+        $('#PresentDivision').val(data.PresentDivision || '');
+        $('#PresentDistrict').val(data.PresentDistrict || '');
+        $('#PresentThanaUpazilla').val(data.PresentThanaUpazilla || '');
+        $('#PresentPostOffice').val(data.PresentPostOffice || '');
 
-        $('#PermanentHouseVillageName').val(data.PermanentHouseVillageName);
-        $('#PermanentHouseNo').val(data.PermanentHouseNo);
-        $('#PermanentRoadNo').val(data.PermanentRoadNo);
-        $('#PermanentBlock').val(data.PermanentBlock);
-        $('#PermanentArea').val(data.PermanentArea);
-        $('#PermanentSector').val(data.PermanentSector);
-        $('#PermanentCountry').val(data.PermanentCountry);
-        $('#PermanentDivision').val(data.PermanentDivision);
-        $('#PermanentDistrict').val(data.PermanentDistrict);
-        $('#PermanentThanaUpazilla').val(data.PermanentThanaUpazilla);
-        $('#PermanentPostOffice').val(data.PermanentPostOffice);
+        $('#PermanentHouseVillageName').val(data.PermanentHouseVillageName || '');
+        $('#PermanentHouseNo').val(data.PermanentHouseNo || '');
+        $('#PermanentRoadNo').val(data.PermanentRoadNo || '');
+        $('#PermanentBlock').val(data.PermanentBlock || '');
+        $('#PermanentArea').val(data.PermanentArea || '');
+        $('#PermanentSector').val(data.PermanentSector || '');
+        $('#PermanentCountry').val(data.PermanentCountry || '');
+        $('#PermanentDivision').val(data.PermanentDivision || '');
+        $('#PermanentDistrict').val(data.PermanentDistrict || '');
+        $('#PermanentThanaUpazilla').val(data.PermanentThanaUpazilla || '');
+        $('#PermanentPostOffice').val(data.PermanentPostOffice || '');
     });
 }
 
-function saveGeneralInfo() {
-    var dto = {
-        Id: $('#EmployeeDbId').val(),
-        EmployeeCode: $('#EmployeeCode').val(),
-        EmployeeName: $('#EmployeeName').val(),
-        FatherName: $('#FatherName').val(),
-        MotherName: $('#MotherName').val(),
-        MobileNo: $('#MobileNo').val(),
-        BasicSalary: $('#BasicSalary').val(),
-        DateOfBirth: $('#DateOfBirth').val()
-    };
-
-    $.ajax({
-        url: '/AdminEmployeeInformation/UpdateEmployeeGeneralInfo',
-        type: 'POST',
-        data: dto,
-        success: function () {
-            alert('General information saved successfully.');
-        },
-        error: function () {
-            alert('Save failed.');
-        }
-    });
-}
-
-function saveAddressInfo() {
-    var employeeName = ($('#EmployeeName').val() || '').trim();
-    var employeeCode = ($('#EmployeeCode').val() || '').trim();
-
-    if (!employeeName || !employeeCode) {
-        alert('Please enter Employee Name and Employee Code first.');
-        return;
-    }
-
-    $.ajax({
-        url: '/AdminEmployeeInformation/UpdateEmployeeAddressInfo',
-        type: 'POST',
-        data: {
-            employeeCode: employeeCode,
-
-            'dto.PresentHouseVillageName': $('#PresentHouseVillageName').val(),
-            'dto.PresentHouseNo': $('#PresentHouseNo').val(),
-            'dto.PresentRoadNo': $('#PresentRoadNo').val(),
-            'dto.PresentBlock': $('#PresentBlock').val(),
-            'dto.PresentArea': $('#PresentArea').val(),
-            'dto.PresentSector': $('#PresentSector').val(),
-            'dto.PresentCountry': $('#PresentCountry').val(),
-            'dto.PresentDivision': $('#PresentDivision').val(),
-            'dto.PresentDistrict': $('#PresentDistrict').val(),
-            'dto.PresentThanaUpazilla': $('#PresentThanaUpazilla').val(),
-            'dto.PresentPostOffice': $('#PresentPostOffice').val(),
-
-            'dto.PermanentHouseVillageName': $('#PermanentHouseVillageName').val(),
-            'dto.PermanentHouseNo': $('#PermanentHouseNo').val(),
-            'dto.PermanentRoadNo': $('#PermanentRoadNo').val(),
-            'dto.PermanentBlock': $('#PermanentBlock').val(),
-            'dto.PermanentArea': $('#PermanentArea').val(),
-            'dto.PermanentSector': $('#PermanentSector').val(),
-            'dto.PermanentCountry': $('#PermanentCountry').val(),
-            'dto.PermanentDivision': $('#PermanentDivision').val(),
-            'dto.PermanentDistrict': $('#PermanentDistrict').val(),
-            'dto.PermanentThanaUpazilla': $('#PermanentThanaUpazilla').val(),
-            'dto.PermanentPostOffice': $('#PermanentPostOffice').val()
-        },
-        success: function (response) {
-            if (response && response.success) {
-                alert('Address information saved successfully.');
-            } else {
-                alert(response && response.message ? response.message : 'Address save failed.');
-            }
-        },
-        error: function (xhr) {
-            alert(xhr.responseText || 'Address save failed.');
-        }
-    });
-}
 function loadEmployeeEducations(employeeId) {
     $.get('/AdminEmployeeInformation/GetEmployeeEducations', { employeeId: employeeId }, function (data) {
-        var tbody = $('#educationTable tbody');
-        tbody.empty();
-
-        $.each(data || [], function (i, item) {
-            var row = '<tr data-id="' + item.Id + '">' +
-                '<td data-educationid="' + item.EducationId + '">' + (item.EducationName || '') + '</td>' +
-                '<td data-group="' + htmlEncode(item.Group) + '">' + (item.Group || '') + '</td>' +
-                '<td data-board="' + htmlEncode(item.Board) + '">' + (item.Board || '') + '</td>' +
-                '<td data-year="' + htmlEncode(item.AcademicYear) + '">' + (item.AcademicYear || '') + '</td>' +
-                '<td data-institute="' + htmlEncode(item.AcademicInstitute) + '">' + (item.AcademicInstitute || '') + '</td>' +
-                '<td data-division="' + htmlEncode(item.Division) + '">' + (item.Division || '') + '</td>' +
-                '<td data-result="' + htmlEncode(item.Result) + '">' + (item.Result || '') + '</td>' +
-                '<td>' +
-                '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editEducationRow(this)">Edit</button> ' +
-                '<button type="button" class="btn btn-sm btn-danger" onclick="deleteEducationRow(' + item.Id + ')">Delete</button>' +
-                '</td>' +
-                '</tr>';
-
-            tbody.append(row);
+        educationRows = $.map(data || [], function (item) {
+            return {
+                Id: item.Id || 0,
+                EmployeeId: item.EmployeeId || 0,
+                EducationId: item.EducationId || 0,
+                EducationName: item.EducationName || '',
+                Group: item.Group || '',
+                Board: item.Board || '',
+                AcademicYear: item.AcademicYear || '',
+                AcademicInstitute: item.AcademicInstitute || '',
+                Division: item.Division || '',
+                Result: item.Result || '',
+                IsEditMode: false
+            };
         });
+
+        renderEducationRows();
     });
 }
 
 function addEducationRow() {
-    var row = '<tr data-id="0">' +
-        '<td><select class="form-control edu-id">' + getEducationOptions('') + '</select></td>' +
-        '<td><select class="form-control edu-group">' + getStringOptions(educationFieldDropdowns.Groups, '') + '</select></td>' +
-        '<td><select class="form-control edu-board">' + getStringOptions(educationFieldDropdowns.Boards, '') + '</select></td>' +
-        '<td><select class="form-control edu-year">' + getStringOptions(educationFieldDropdowns.AcademicYears, '') + '</select></td>' +
-        '<td><select class="form-control edu-institute">' + getStringOptions(educationFieldDropdowns.AcademicInstitutes, '') + '</select></td>' +
-        '<td><select class="form-control edu-division">' + getStringOptions(educationFieldDropdowns.Divisions, '') + '</select></td>' +
-        '<td><select class="form-control edu-result">' + getStringOptions(educationFieldDropdowns.Results, '') + '</select></td>' +
-        '<td><button type="button" class="btn btn-sm btn-success" onclick="saveEducationRow(this)">Save</button></td>' +
-        '</tr>';
+    educationRows.push({
+        Id: 0,
+        EmployeeId: parseInt($('#EmployeeDbId').val() || '0'),
+        EducationId: 0,
+        EducationName: '',
+        Group: '',
+        Board: '',
+        AcademicYear: '',
+        AcademicInstitute: '',
+        Division: '',
+        Result: '',
+        IsEditMode: true
+    });
 
-    $('#educationTable tbody').append(row);
+    renderEducationRows();
 }
 
-function editEducationRow(btn) {
-    var row = $(btn).closest('tr');
-    var id = row.attr('data-id');
-    var tds = row.find('td');
-
-    var educationId = $(tds[0]).attr('data-educationid');
-    var group = $(tds[1]).text().trim();
-    var board = $(tds[2]).text().trim();
-    var year = $(tds[3]).text().trim();
-    var institute = $(tds[4]).text().trim();
-    var division = $(tds[5]).text().trim();
-    var result = $(tds[6]).text().trim();
-
-    row.html(
-        '<td><select class="form-control edu-id">' + getEducationOptions(educationId) + '</select></td>' +
-        '<td><select class="form-control edu-group">' + getStringOptions(educationFieldDropdowns.Groups, group) + '</select></td>' +
-        '<td><select class="form-control edu-board">' + getStringOptions(educationFieldDropdowns.Boards, board) + '</select></td>' +
-        '<td><select class="form-control edu-year">' + getStringOptions(educationFieldDropdowns.AcademicYears, year) + '</select></td>' +
-        '<td><select class="form-control edu-institute">' + getStringOptions(educationFieldDropdowns.AcademicInstitutes, institute) + '</select></td>' +
-        '<td><select class="form-control edu-division">' + getStringOptions(educationFieldDropdowns.Divisions, division) + '</select></td>' +
-        '<td><select class="form-control edu-result">' + getStringOptions(educationFieldDropdowns.Results, result) + '</select></td>' +
-        '<td><button type="button" class="btn btn-sm btn-success" onclick="saveEducationRow(this)">Save</button></td>'
-    );
-
-    row.attr('data-id', id);
+function editEducationRow(index) {
+    if (educationRows[index]) {
+        educationRows[index].IsEditMode = true;
+        renderEducationRows();
+    }
 }
 
-function saveEducationRow(btn) {
-    var row = $(btn).closest('tr');
+function saveEducationRow(index) {
+    var $row = $('#educationTable tbody tr[data-index="' + index + '"]');
+    if (!$row.length) return;
+
+    var educationId = parseInt($row.find('.edu-id').val() || '0');
+    var educationName = educationId > 0 ? $row.find('.edu-id option:selected').text() : '';
+
+    educationRows[index] = {
+        Id: 0,
+        EmployeeId: 0,
+        EducationId: educationId,
+        EducationName: educationName,
+        Group: $row.find('.edu-group').val() || '',
+        Board: $row.find('.edu-board').val() || '',
+        AcademicYear: $row.find('.edu-year').val() || '',
+        AcademicInstitute: $row.find('.edu-institute').val() || '',
+        Division: $row.find('.edu-division').val() || '',
+        Result: $row.find('.edu-result').val() || '',
+        IsEditMode: false
+    };
+
+    renderEducationRows();
+}
+function deleteEducationRow(index) {
+    if (!confirm('Are you sure you want to delete this row?')) {
+        return;
+    }
+
+    educationRows.splice(index, 1);
+    renderEducationRows();
+}
+
+function renderEducationRows() {
+    var tbody = $('#educationTable tbody');
+    tbody.empty();
+
+    $.each(educationRows, function (index, item) {
+        if (item.IsEditMode) {
+            var editRow = '<tr data-index="' + index + '" data-id="' + (item.Id || 0) + '">' +
+                '<td><select class="form-control edu-id">' + getEducationOptions(item.EducationId) + '</select></td>' +
+                '<td><select class="form-control edu-group">' + getStringOptions(educationFieldDropdowns.Groups, item.Group) + '</select></td>' +
+                '<td><select class="form-control edu-board">' + getStringOptions(educationFieldDropdowns.Boards, item.Board) + '</select></td>' +
+                '<td><select class="form-control edu-year">' + getStringOptions(educationFieldDropdowns.AcademicYears, item.AcademicYear) + '</select></td>' +
+                '<td><select class="form-control edu-institute">' + getStringOptions(educationFieldDropdowns.AcademicInstitutes, item.AcademicInstitute) + '</select></td>' +
+                '<td><select class="form-control edu-division">' + getStringOptions(educationFieldDropdowns.Divisions, item.Division) + '</select></td>' +
+                '<td><select class="form-control edu-result">' + getStringOptions(educationFieldDropdowns.Results, item.Result) + '</select></td>' +
+                '<td>' +
+                '<button type="button" class="btn btn-sm btn-success me-1" onclick="saveEducationRow(' + index + ')">LOCAL ONLY</button>'
+                '<button type="button" class="btn btn-sm btn-danger" onclick="deleteEducationRow(' + index + ')">Delete</button>' +
+                '</td>' +
+                '</tr>';
+
+            tbody.append(editRow);
+        } else {
+            var displayRow = '<tr data-index="' + index + '" data-id="' + (item.Id || 0) + '">' +
+                '<td>' + htmlEncode(item.EducationName) + '</td>' +
+                '<td>' + htmlEncode(item.Group) + '</td>' +
+                '<td>' + htmlEncode(item.Board) + '</td>' +
+                '<td>' + htmlEncode(item.AcademicYear) + '</td>' +
+                '<td>' + htmlEncode(item.AcademicInstitute) + '</td>' +
+                '<td>' + htmlEncode(item.Division) + '</td>' +
+                '<td>' + htmlEncode(item.Result) + '</td>' +
+                '<td>' +
+                '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editEducationRow(' + index + ')">Edit</button>' +
+                '<button type="button" class="btn btn-sm btn-danger" onclick="deleteEducationRow(' + index + ')">Delete</button>' +
+                '</td>' +
+                '</tr>';
+
+            tbody.append(displayRow);
+        }
+    });
+}
+
+function getEducationRows() {
+    var rows = [];
+
+    $.each(educationRows, function (index, sourceRow) {
+        rows.push({
+            Id: sourceRow.Id || 0,
+            EmployeeId: parseInt($('#EmployeeDbId').val() || '0'),
+            EducationId: sourceRow.EducationId || 0,
+            EducationName: sourceRow.EducationName || '',
+            Group: sourceRow.Group || '',
+            Board: sourceRow.Board || '',
+            AcademicYear: sourceRow.AcademicYear || '',
+            AcademicInstitute: sourceRow.AcademicInstitute || '',
+            Division: sourceRow.Division || '',
+            Result: sourceRow.Result || ''
+        });
+    });
+
+    return rows;
+}
+
+function saveAllEmployeeInformation() {
     var employeeName = ($('#EmployeeName').val() || '').trim();
     var employeeCode = ($('#EmployeeCode').val() || '').trim();
 
@@ -324,55 +317,87 @@ function saveEducationRow(btn) {
         return;
     }
 
-    $.ajax({
-        url: '/AdminEmployeeInformation/SaveEducation',
-        type: 'POST',
-        data: {
-            employeeCode: employeeCode,
-            'dto.Id': row.attr('data-id'),
-            'dto.EducationId': row.find('.edu-id').val(),
-            'dto.Group': row.find('.edu-group').val(),
-            'dto.Board': row.find('.edu-board').val(),
-            'dto.AcademicYear': row.find('.edu-year').val(),
-            'dto.AcademicInstitute': row.find('.edu-institute').val(),
-            'dto.Division': row.find('.edu-division').val(),
-            'dto.Result': row.find('.edu-result').val()
+    if ($('#SameAsPresent').is(':checked')) {
+        copyPresentToPermanent();
+    }
+
+    var payload = {
+        GeneralInfo: {
+            GeneralInfoId: parseInt($('#GeneralInfoId').val() || '0'),
+            Id: parseInt($('#EmployeeDbId').val() || '0'),
+            EmployeeCode: employeeCode,
+            EmployeeName: employeeName,
+            FatherName: $('#FatherName').val(),
+            MotherName: $('#MotherName').val(),
+            MobileNo: $('#MobileNo').val(),
+            BasicSalary: $('#BasicSalary').val() ? parseFloat($('#BasicSalary').val()) : null,
+            DateOfBirth: $('#DateOfBirth').val(),
+            DesignationId: $('#DesignationName').val() ? parseInt($('#DesignationName').val()) : null,
+            DepartmentId: $('#DepartmentName').val() ? parseInt($('#DepartmentName').val()) : null,
+            DesignationName: $('#DesignationName option:selected').val() ? $('#DesignationName option:selected').text() : '',
+            DepartmentName: $('#DepartmentName option:selected').val() ? $('#DepartmentName option:selected').text() : '',
+            BranchName: $('#BranchName').val()
         },
+        AddressInfo: {
+            PresentHouseVillageName: $('#PresentHouseVillageName').val(),
+            PresentHouseNo: $('#PresentHouseNo').val(),
+            PresentRoadNo: $('#PresentRoadNo').val(),
+            PresentBlock: $('#PresentBlock').val(),
+            PresentArea: $('#PresentArea').val(),
+            PresentSector: $('#PresentSector').val(),
+            PresentCountry: $('#PresentCountry').val(),
+            PresentDivision: $('#PresentDivision').val(),
+            PresentDistrict: $('#PresentDistrict').val(),
+            PresentThanaUpazilla: $('#PresentThanaUpazilla').val(),
+            PresentPostOffice: $('#PresentPostOffice').val(),
+
+            PermanentHouseVillageName: $('#PermanentHouseVillageName').val(),
+            PermanentHouseNo: $('#PermanentHouseNo').val(),
+            PermanentRoadNo: $('#PermanentRoadNo').val(),
+            PermanentBlock: $('#PermanentBlock').val(),
+            PermanentArea: $('#PermanentArea').val(),
+            PermanentSector: $('#PermanentSector').val(),
+            PermanentCountry: $('#PermanentCountry').val(),
+            PermanentDivision: $('#PermanentDivision').val(),
+            PermanentDistrict: $('#PermanentDistrict').val(),
+            PermanentThanaUpazilla: $('#PermanentThanaUpazilla').val(),
+            PermanentPostOffice: $('#PermanentPostOffice').val()
+        },
+        Educations: getEducationRows()
+    };
+
+    $.ajax({
+        url: '/AdminEmployeeInformation/SaveAllEmployeeInformation',
+        type: 'POST',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(payload),
         success: function (response) {
             if (response && response.success) {
-                var dbId = $('#EmployeeDbId').val();
-                if (dbId) {
-                    loadEmployeeEducations(dbId);
-                }
-                alert('Education information saved successfully.');
+                alert(response.message || 'All employee information saved successfully.');
+                loadEmployeeGeneralInfo(employeeCode);
+                loadEmployeeAddressInfo(employeeCode);
             } else {
-                alert(response && response.message ? response.message : 'Education save failed.');
+                alert(response && response.message ? response.message : 'Save failed.');
             }
         },
         error: function (xhr) {
-            alert(xhr.responseText || 'Education save failed.');
+            alert(xhr.responseText || 'Save failed.');
         }
     });
 }
-function htmlEncode(value) {
-    return $('<div/>').text(value || '').html();
-}
-function deleteEducationRow(id) {
-    if (!confirm('Are you sure you want to delete this row?')) {
-        return;
-    }
 
-    $.ajax({
-        url: '/AdminEmployeeInformation/DeleteEducation',
-        type: 'POST',
-        data: { id: id },
-        success: function () {
-            loadEmployeeEducations($('#EmployeeDbId').val());
-        },
-        error: function () {
-            alert('Delete failed.');
-        }
-    });
+function copyPresentToPermanent() {
+    $('#PermanentHouseVillageName').val($('#PresentHouseVillageName').val());
+    $('#PermanentHouseNo').val($('#PresentHouseNo').val());
+    $('#PermanentRoadNo').val($('#PresentRoadNo').val());
+    $('#PermanentBlock').val($('#PresentBlock').val());
+    $('#PermanentArea').val($('#PresentArea').val());
+    $('#PermanentSector').val($('#PresentSector').val());
+    $('#PermanentCountry').val($('#PresentCountry').val());
+    $('#PermanentDivision').val($('#PresentDivision').val());
+    $('#PermanentDistrict').val($('#PresentDistrict').val());
+    $('#PermanentThanaUpazilla').val($('#PresentThanaUpazilla').val());
+    $('#PermanentPostOffice').val($('#PresentPostOffice').val());
 }
 
 function getEducationOptions(selectedId) {
@@ -380,7 +405,7 @@ function getEducationOptions(selectedId) {
 
     $.each(educationDropdown, function (i, item) {
         var selected = String(item.Id) === String(selectedId) ? ' selected="selected"' : '';
-        html += '<option value="' + item.Id + '"' + selected + '>' + item.EducationName + '</option>';
+        html += '<option value="' + item.Id + '"' + selected + '>' + htmlEncode(item.EducationName) + '</option>';
     });
 
     return html;

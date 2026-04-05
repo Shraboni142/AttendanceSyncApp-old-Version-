@@ -13,5 +13,8 @@
         public string DesignationName { get; set; }
         public string DepartmentName { get; set; }
         public string BranchName { get; set; }
+        public int GeneralInfoId { get; set; }
+        public int? DesignationId { get; set; }
+        public int? DepartmentId { get; set; }
     }
 }

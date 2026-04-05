@@ -16,6 +16,7 @@ namespace AttendanceSyncApp.Services.Interfaces
         List<EducationDropdownDto> GetEducationDropdown();
         EducationFieldDropdownsDto GetEducationFieldDropdowns();
         bool SaveEducation(string employeeCode, EmployeeEducationDto dto);
+        bool SaveAllEmployeeInformation(EmployeeFullInformationSaveDto dto);
         bool DeleteEducation(int id);
         List<DropdownItemDto> GetDesignations();
         List<DropdownItemDto> GetDepartments();

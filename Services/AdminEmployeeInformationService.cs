@@ -8,30 +8,27 @@ namespace AttendanceSyncApp.Services
 {
     public class AdminEmployeeInformationService : IAdminEmployeeInformationService
     {
-        private string GetConnectionString()
+        private string GetSmartToolsConnectionString()
         {
-            return "Server=192.168.14.100;Database=Smart_v4_seba_Test;User Id=intran;Password=!ntr@n321;Encrypt=False;TrustServerCertificate=True;";
+            return "Server=192.168.14.100;Database=Smart_Tools;User Id=intran;Password=!ntr@n321;Encrypt=False;TrustServerCertificate=True;";
         }
 
         public List<EmployeeInfoDropdownDto> GetEmployees()
         {
             var result = new List<EmployeeInfoDropdownDto>();
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-                    SELECT 
-                        e.Id,
-                        e.EmployeeId AS EmployeeCode,
-                        LTRIM(RTRIM(
-                            ISNULL(e.FirstName,'') + ' ' +
-                            ISNULL(e.MiddleName,'') + ' ' +
-                            ISNULL(e.LastName,'')
-                        )) AS EmployeeName
-                    FROM dbo.Employees e
-                    ORDER BY e.EmployeeId";
+            SELECT
+                Id,
+                EmployeeCode,
+                EmployeeName
+            FROM dbo.EmployeeInfoEmployees
+            WHERE IsActive = 1
+            ORDER BY EmployeeCode";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -55,32 +52,31 @@ namespace AttendanceSyncApp.Services
         {
             EmployeeInfoGeneralDto data = null;
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-                    SELECT
-                        e.Id,
-                        e.EmployeeId AS EmployeeCode,
-                        LTRIM(RTRIM(
-                            ISNULL(e.FirstName,'') + ' ' +
-                            ISNULL(e.MiddleName,'') + ' ' +
-                            ISNULL(e.LastName,'')
-                        )) AS EmployeeName,
-                        e.FatherName,
-                        e.MotherName,
-                        e.MobileNo,
-                        e.BasicSalary,
-                        e.DateOfBirth,
-                        d.DesignationName,
-                        dp.DepartmentName,
-                        b.BranchName
-                    FROM dbo.Employees e
-                    LEFT JOIN dbo.Designations d ON e.DesignationId = d.Id
-                    LEFT JOIN dbo.Departments dp ON e.DepartmentId = dp.Id
-                    LEFT JOIN dbo.Branches b ON e.BranchId = b.Id
-                    WHERE e.EmployeeId = @EmployeeCode";
+        SELECT TOP 1
+            e.Id AS EmployeeMasterId,
+            g.Id AS GeneralInfoId,
+            e.EmployeeCode,
+            e.EmployeeName,
+            g.FatherName,
+            g.MotherName,
+            g.MobileNo,
+            g.BasicSalary,
+            g.DateOfBirth,
+            g.DesignationId,
+            g.DepartmentId,
+            g.DesignationName,
+            g.DepartmentName,
+            g.BranchName
+        FROM dbo.EmployeeInfoEmployees e
+        LEFT JOIN dbo.EmployeeInfoGeneralInfos g
+            ON LTRIM(RTRIM(e.EmployeeCode)) = LTRIM(RTRIM(g.EmployeeCode))
+        WHERE LTRIM(RTRIM(e.EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+          AND e.IsActive = 1";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -92,7 +88,8 @@ namespace AttendanceSyncApp.Services
                         {
                             data = new EmployeeInfoGeneralDto
                             {
-                                Id = Convert.ToInt32(reader["Id"]),
+                                Id = Convert.ToInt32(reader["EmployeeMasterId"]),
+                                GeneralInfoId = reader["GeneralInfoId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["GeneralInfoId"]),
                                 EmployeeCode = reader["EmployeeCode"]?.ToString(),
                                 EmployeeName = reader["EmployeeName"]?.ToString(),
                                 FatherName = reader["FatherName"]?.ToString(),
@@ -100,6 +97,8 @@ namespace AttendanceSyncApp.Services
                                 MobileNo = reader["MobileNo"]?.ToString(),
                                 BasicSalary = reader["BasicSalary"] == DBNull.Value ? (decimal?)null : Convert.ToDecimal(reader["BasicSalary"]),
                                 DateOfBirth = reader["DateOfBirth"] == DBNull.Value ? "" : Convert.ToDateTime(reader["DateOfBirth"]).ToString("yyyy-MM-dd"),
+                                DesignationId = reader["DesignationId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["DesignationId"]),
+                                DepartmentId = reader["DepartmentId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["DepartmentId"]),
                                 DesignationName = reader["DesignationName"]?.ToString(),
                                 DepartmentName = reader["DepartmentName"]?.ToString(),
                                 BranchName = reader["BranchName"]?.ToString()
@@ -111,36 +110,88 @@ namespace AttendanceSyncApp.Services
 
             return data;
         }
-
         public bool UpdateEmployeeGeneralInfo(EmployeeInfoGeneralDto dto)
         {
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-                    UPDATE dbo.Employees
-                    SET
-                        FatherName = @FatherName,
-                        MotherName = @MotherName,
-                        MobileNo = @MobileNo,
-                        BasicSalary = @BasicSalary,
-                        DateOfBirth = @DateOfBirth
-                    WHERE Id = @Id";
+DECLARE @EmployeeInfoEmployeeId INT;
+
+SELECT TOP 1 @EmployeeInfoEmployeeId = Id
+FROM dbo.EmployeeInfoEmployees
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.EmployeeInfoGeneralInfos
+    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+)
+BEGIN
+    UPDATE dbo.EmployeeInfoGeneralInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeName = @EmployeeName,
+        FatherName = @FatherName,
+        MotherName = @MotherName,
+        MobileNo = @MobileNo,
+        BasicSalary = @BasicSalary,
+        DateOfBirth = @DateOfBirth,
+        DesignationName = @DesignationName,
+        DepartmentName = @DepartmentName,
+        BranchName = @BranchName,
+        UpdatedAt = GETDATE()
+    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.EmployeeInfoGeneralInfos
+    (
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        EmployeeName,
+        FatherName,
+        MotherName,
+        MobileNo,
+        BasicSalary,
+        DateOfBirth,
+        DesignationName,
+        DepartmentName,
+        BranchName
+    )
+    VALUES
+    (
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @EmployeeName,
+        @FatherName,
+        @MotherName,
+        @MobileNo,
+        @BasicSalary,
+        @DateOfBirth,
+        @DesignationName,
+        @DepartmentName,
+        @BranchName
+    )
+END";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
+                    cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@FatherName", (object)dto.FatherName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@MotherName", (object)dto.MotherName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@MobileNo", (object)dto.MobileNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@BasicSalary", (object)dto.BasicSalary ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DesignationName", (object)dto.DesignationName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DepartmentName", (object)dto.DepartmentName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@BranchName", (object)dto.BranchName ?? DBNull.Value);
 
                     if (string.IsNullOrWhiteSpace(dto.DateOfBirth))
                         cmd.Parameters.AddWithValue("@DateOfBirth", DBNull.Value);
                     else
                         cmd.Parameters.AddWithValue("@DateOfBirth", Convert.ToDateTime(dto.DateOfBirth));
-
-                    cmd.Parameters.AddWithValue("@Id", dto.Id);
 
                     cmd.ExecuteNonQuery();
                 }
@@ -148,42 +199,40 @@ namespace AttendanceSyncApp.Services
 
             return true;
         }
-
         public EmployeeInfoAddressDto GetEmployeeAddressInfo(string employeeCode)
         {
             EmployeeInfoAddressDto data = null;
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-                    SELECT
-                        HouseName,
-                        HouseNo,
-                        RoadNo,
-                        Block,
-                        Area,
-                        Sector,
-                        CountryId,
-                        DivisionId,
-                        DistrictId,
-                        ThanaId,
-                        PostOfficeId,
-
-                        PerHouseName,
-                        PerHouseNo,
-                        PerRoadNo,
-                        PerBlock,
-                        PerArea,
-                        PerSector,
-                        PerCountryId,
-                        PerDivisionId,
-                        PerDistrictId,
-                        PerThanaId,
-                        PerPostOfficeId
-                    FROM dbo.Employees
-                    WHERE EmployeeId = @EmployeeCode";
+            SELECT TOP 1
+                PresentHouseVillageName,
+                PresentHouseNo,
+                PresentRoadNo,
+                PresentBlock,
+                PresentArea,
+                PresentSector,
+                PresentCountry,
+                PresentDivision,
+                PresentDistrict,
+                PresentThanaUpazilla,
+                PresentPostOffice,
+                PermanentHouseVillageName,
+                PermanentHouseNo,
+                PermanentRoadNo,
+                PermanentBlock,
+                PermanentArea,
+                PermanentSector,
+                PermanentCountry,
+                PermanentDivision,
+                PermanentDistrict,
+                PermanentThanaUpazilla,
+                PermanentPostOffice
+            FROM dbo.EmployeeInfoAddressInfos
+            WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -195,74 +244,147 @@ namespace AttendanceSyncApp.Services
                         {
                             data = new EmployeeInfoAddressDto
                             {
-                                PresentHouseVillageName = reader["HouseName"]?.ToString(),
-                                PresentHouseNo = reader["HouseNo"]?.ToString(),
-                                PresentRoadNo = reader["RoadNo"]?.ToString(),
-                                PresentBlock = reader["Block"]?.ToString(),
-                                PresentArea = reader["Area"]?.ToString(),
-                                PresentSector = reader["Sector"]?.ToString(),
-                                PresentCountry = reader["CountryId"]?.ToString(),
-                                PresentDivision = reader["DivisionId"]?.ToString(),
-                                PresentDistrict = reader["DistrictId"]?.ToString(),
-                                PresentThanaUpazilla = reader["ThanaId"]?.ToString(),
-                                PresentPostOffice = reader["PostOfficeId"]?.ToString(),
+                                PresentHouseVillageName = reader["PresentHouseVillageName"]?.ToString(),
+                                PresentHouseNo = reader["PresentHouseNo"]?.ToString(),
+                                PresentRoadNo = reader["PresentRoadNo"]?.ToString(),
+                                PresentBlock = reader["PresentBlock"]?.ToString(),
+                                PresentArea = reader["PresentArea"]?.ToString(),
+                                PresentSector = reader["PresentSector"]?.ToString(),
+                                PresentCountry = reader["PresentCountry"]?.ToString(),
+                                PresentDivision = reader["PresentDivision"]?.ToString(),
+                                PresentDistrict = reader["PresentDistrict"]?.ToString(),
+                                PresentThanaUpazilla = reader["PresentThanaUpazilla"]?.ToString(),
+                                PresentPostOffice = reader["PresentPostOffice"]?.ToString(),
 
-                                PermanentHouseVillageName = reader["PerHouseName"]?.ToString(),
-                                PermanentHouseNo = reader["PerHouseNo"]?.ToString(),
-                                PermanentRoadNo = reader["PerRoadNo"]?.ToString(),
-                                PermanentBlock = reader["PerBlock"]?.ToString(),
-                                PermanentArea = reader["PerArea"]?.ToString(),
-                                PermanentSector = reader["PerSector"]?.ToString(),
-                                PermanentCountry = reader["PerCountryId"]?.ToString(),
-                                PermanentDivision = reader["PerDivisionId"]?.ToString(),
-                                PermanentDistrict = reader["PerDistrictId"]?.ToString(),
-                                PermanentThanaUpazilla = reader["PerThanaId"]?.ToString(),
-                                PermanentPostOffice = reader["PerPostOfficeId"]?.ToString()
+                                PermanentHouseVillageName = reader["PermanentHouseVillageName"]?.ToString(),
+                                PermanentHouseNo = reader["PermanentHouseNo"]?.ToString(),
+                                PermanentRoadNo = reader["PermanentRoadNo"]?.ToString(),
+                                PermanentBlock = reader["PermanentBlock"]?.ToString(),
+                                PermanentArea = reader["PermanentArea"]?.ToString(),
+                                PermanentSector = reader["PermanentSector"]?.ToString(),
+                                PermanentCountry = reader["PermanentCountry"]?.ToString(),
+                                PermanentDivision = reader["PermanentDivision"]?.ToString(),
+                                PermanentDistrict = reader["PermanentDistrict"]?.ToString(),
+                                PermanentThanaUpazilla = reader["PermanentThanaUpazilla"]?.ToString(),
+                                PermanentPostOffice = reader["PermanentPostOffice"]?.ToString()
                             };
                         }
                     }
                 }
             }
 
-            return data;
+            return data ?? new EmployeeInfoAddressDto();
         }
 
         public bool UpdateEmployeeAddressInfo(string employeeCode, EmployeeInfoAddressDto dto)
         {
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
-            UPDATE dbo.Employees
-            SET
-                HouseName = @PresentHouseVillageName,
-                HouseNo = @PresentHouseNo,
-                RoadNo = @PresentRoadNo,
-                Block = @PresentBlock,
-                Area = @PresentArea,
-                Sector = @PresentSector,
-                CountryId = @PresentCountry,
-                DivisionId = @PresentDivision,
-                DistrictId = @PresentDistrict,
-                ThanaId = @PresentThanaUpazilla,
-                PostOfficeId = @PresentPostOffice,
+DECLARE @EmployeeInfoEmployeeId INT;
 
-                PerHouseName = @PermanentHouseVillageName,
-                PerHouseNo = @PermanentHouseNo,
-                PerRoadNo = @PermanentRoadNo,
-                PerBlock = @PermanentBlock,
-                PerArea = @PermanentArea,
-                PerSector = @PermanentSector,
-                PerCountryId = @PermanentCountry,
-                PerDivisionId = @PermanentDivision,
-                PerDistrictId = @PermanentDistrict,
-                PerThanaId = @PermanentThanaUpazilla,
-                PerPostOfficeId = @PermanentPostOffice
-            WHERE LTRIM(RTRIM(CAST(EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(@EmployeeCode))";
+SELECT TOP 1 @EmployeeInfoEmployeeId = Id
+FROM dbo.EmployeeInfoEmployees
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.EmployeeInfoAddressInfos
+    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+)
+BEGIN
+    UPDATE dbo.EmployeeInfoAddressInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        PresentHouseVillageName = @PresentHouseVillageName,
+        PresentHouseNo = @PresentHouseNo,
+        PresentRoadNo = @PresentRoadNo,
+        PresentBlock = @PresentBlock,
+        PresentArea = @PresentArea,
+        PresentSector = @PresentSector,
+        PresentCountry = @PresentCountry,
+        PresentDivision = @PresentDivision,
+        PresentDistrict = @PresentDistrict,
+        PresentThanaUpazilla = @PresentThanaUpazilla,
+        PresentPostOffice = @PresentPostOffice,
+        PermanentHouseVillageName = @PermanentHouseVillageName,
+        PermanentHouseNo = @PermanentHouseNo,
+        PermanentRoadNo = @PermanentRoadNo,
+        PermanentBlock = @PermanentBlock,
+        PermanentArea = @PermanentArea,
+        PermanentSector = @PermanentSector,
+        PermanentCountry = @PermanentCountry,
+        PermanentDivision = @PermanentDivision,
+        PermanentDistrict = @PermanentDistrict,
+        PermanentThanaUpazilla = @PermanentThanaUpazilla,
+        PermanentPostOffice = @PermanentPostOffice,
+        UpdatedAt = GETDATE()
+    WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.EmployeeInfoAddressInfos
+    (
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        PresentHouseVillageName,
+        PresentHouseNo,
+        PresentRoadNo,
+        PresentBlock,
+        PresentArea,
+        PresentSector,
+        PresentCountry,
+        PresentDivision,
+        PresentDistrict,
+        PresentThanaUpazilla,
+        PresentPostOffice,
+        PermanentHouseVillageName,
+        PermanentHouseNo,
+        PermanentRoadNo,
+        PermanentBlock,
+        PermanentArea,
+        PermanentSector,
+        PermanentCountry,
+        PermanentDivision,
+        PermanentDistrict,
+        PermanentThanaUpazilla,
+        PermanentPostOffice
+    )
+    VALUES
+    (
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @PresentHouseVillageName,
+        @PresentHouseNo,
+        @PresentRoadNo,
+        @PresentBlock,
+        @PresentArea,
+        @PresentSector,
+        @PresentCountry,
+        @PresentDivision,
+        @PresentDistrict,
+        @PresentThanaUpazilla,
+        @PresentPostOffice,
+        @PermanentHouseVillageName,
+        @PermanentHouseNo,
+        @PermanentRoadNo,
+        @PermanentBlock,
+        @PermanentArea,
+        @PermanentSector,
+        @PermanentCountry,
+        @PermanentDivision,
+        @PermanentDistrict,
+        @PermanentThanaUpazilla,
+        @PermanentPostOffice
+    )
+END";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
+                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+
                     cmd.Parameters.AddWithValue("@PresentHouseVillageName", (object)dto.PresentHouseVillageName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@PresentHouseNo", (object)dto.PresentHouseNo ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@PresentRoadNo", (object)dto.PresentRoadNo ?? DBNull.Value);
@@ -287,44 +409,60 @@ namespace AttendanceSyncApp.Services
                     cmd.Parameters.AddWithValue("@PermanentThanaUpazilla", (object)dto.PermanentThanaUpazilla ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@PermanentPostOffice", (object)dto.PermanentPostOffice ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
-
                     cmd.ExecuteNonQuery();
-
-                   
                 }
             }
 
             return true;
         }
-
         public List<EmployeeEducationDto> GetEmployeeEducations(int employeeId)
         {
             var result = new List<EmployeeEducationDto>();
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
+                string employeeCode = GetEmployeeCodeById(employeeId, conn);
+
+                string generalQuery = @"
+        SELECT TOP 1 Id
+        FROM dbo.EmployeeInfoGeneralInfos
+        WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode))";
+
+                object generalObj;
+                using (SqlCommand generalCmd = new SqlCommand(generalQuery, conn))
+                {
+                    generalCmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+                    generalObj = generalCmd.ExecuteScalar();
+                }
+
+                if (generalObj == null || generalObj == DBNull.Value)
+                {
+                    return result;
+                }
+
+                int generalInfoId = Convert.ToInt32(generalObj);
+
                 string query = @"
-    SELECT
-        eu.Id,
-        eu.EmployeeId,
-        eu.EducationId,
-        e.EducationName,
-        eu.[Group],
-        eu.Board,
-        eu.AcademicYear,
-        eu.AcademicInstitute,
-        eu.Division,
-        CAST(eu.CGPA AS NVARCHAR(100)) AS Result
-    FROM dbo.EducationUnits eu
-    LEFT JOIN dbo.Educations e ON eu.EducationId = e.Id
-    WHERE eu.EmployeeId = @EmployeeId
-    ORDER BY eu.Id";
+        SELECT
+            Id,
+            EmployeeCode,
+            EducationId,
+            EducationName,
+            [Group],
+            Board,
+            AcademicYear,
+            AcademicInstitute,
+            Division,
+            Result
+        FROM dbo.EmployeeInfoEducationInfos
+        WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+        ORDER BY Id";
+
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
 
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
@@ -333,8 +471,7 @@ namespace AttendanceSyncApp.Services
                             result.Add(new EmployeeEducationDto
                             {
                                 Id = Convert.ToInt32(reader["Id"]),
-                                EmployeeId = Convert.ToInt32(reader["EmployeeId"]),
-                                EducationId = Convert.ToInt32(reader["EducationId"]),
+                                EducationId = reader["EducationId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["EducationId"]),
                                 EducationName = reader["EducationName"]?.ToString(),
                                 Group = reader["Group"]?.ToString(),
                                 Board = reader["Board"]?.ToString(),
@@ -354,14 +491,15 @@ namespace AttendanceSyncApp.Services
         {
             var result = new List<DropdownItemDto>();
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
             SELECT Id, DesignationName
-            FROM dbo.Designations
-            WHERE DesignationName IS NOT NULL
+            FROM dbo.EmployeeInfoDesignations
+            WHERE IsActive = 1
+              AND DesignationName IS NOT NULL
               AND LTRIM(RTRIM(DesignationName)) <> ''
             ORDER BY DesignationName";
 
@@ -372,8 +510,8 @@ namespace AttendanceSyncApp.Services
                     {
                         result.Add(new DropdownItemDto
                         {
-                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
-                            Name = reader["DesignationName"] != DBNull.Value ? reader["DesignationName"].ToString() : ""
+                            Id = Convert.ToInt32(reader["Id"]),
+                            Name = reader["DesignationName"]?.ToString()
                         });
                     }
                 }
@@ -386,14 +524,15 @@ namespace AttendanceSyncApp.Services
         {
             var result = new List<DropdownItemDto>();
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 string query = @"
             SELECT Id, DepartmentName
-            FROM dbo.Departments
-            WHERE DepartmentName IS NOT NULL
+            FROM dbo.EmployeeInfoDepartments
+            WHERE IsActive = 1
+              AND DepartmentName IS NOT NULL
               AND LTRIM(RTRIM(DepartmentName)) <> ''
             ORDER BY DepartmentName";
 
@@ -404,8 +543,8 @@ namespace AttendanceSyncApp.Services
                     {
                         result.Add(new DropdownItemDto
                         {
-                            Id = reader["Id"] != DBNull.Value ? Convert.ToInt32(reader["Id"]) : 0,
-                            Name = reader["DepartmentName"] != DBNull.Value ? reader["DepartmentName"].ToString() : ""
+                            Id = Convert.ToInt32(reader["Id"]),
+                            Name = reader["DepartmentName"]?.ToString()
                         });
                     }
                 }
@@ -417,11 +556,15 @@ namespace AttendanceSyncApp.Services
         {
             var result = new List<EducationDropdownDto>();
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
-                string query = @"SELECT Id, EducationName FROM dbo.Educations WHERE IsDeleted = 0 ORDER BY EducationName";
+                string query = @"
+            SELECT Id, EducationName
+            FROM dbo.EmployeeInfoEducations
+            WHERE IsActive = 1
+            ORDER BY EducationName";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -439,7 +582,6 @@ namespace AttendanceSyncApp.Services
 
             return result;
         }
-
         public EducationFieldDropdownsDto GetEducationFieldDropdowns()
         {
             var result = new EducationFieldDropdownsDto
@@ -452,52 +594,64 @@ namespace AttendanceSyncApp.Services
                 Results = new List<string>()
             };
 
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
                 result.Groups = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([Group] AS NVARCHAR(500)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [Group] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([Group] AS NVARCHAR(500)))) <> ''
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'Group'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+            ORDER BY FieldValue");
 
                 result.Boards = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([Board] AS NVARCHAR(500)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [Board] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([Board] AS NVARCHAR(500)))) <> ''
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'Board'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+            ORDER BY FieldValue");
 
                 result.AcademicYears = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([AcademicYear] AS NVARCHAR(500)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [AcademicYear] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([AcademicYear] AS NVARCHAR(500)))) <> ''
-              AND CAST([AcademicYear] AS NVARCHAR(500)) <> 'YYYY'
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'AcademicYear'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+              AND FieldValue <> 'YYYY'
+            ORDER BY FieldValue");
 
                 result.AcademicInstitutes = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([AcademicInstitute] AS NVARCHAR(1000)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [AcademicInstitute] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([AcademicInstitute] AS NVARCHAR(1000)))) <> ''
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'AcademicInstitute'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+            ORDER BY FieldValue");
 
                 result.Divisions = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([Division] AS NVARCHAR(500)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [Division] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([Division] AS NVARCHAR(500)))) <> ''
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'Division'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+            ORDER BY FieldValue");
 
                 result.Results = GetDistinctStringList(conn, @"
-            SELECT DISTINCT CAST([CGPA] AS NVARCHAR(100)) AS Value
-            FROM dbo.EducationUnits
-            WHERE [CGPA] IS NOT NULL
-              AND LTRIM(RTRIM(CAST([CGPA] AS NVARCHAR(100)))) <> ''
-            ORDER BY Value");
+            SELECT FieldValue
+            FROM dbo.EmployeeInfoEducationFieldValues
+            WHERE IsActive = 1
+              AND FieldType = 'Result'
+              AND FieldValue IS NOT NULL
+              AND LTRIM(RTRIM(FieldValue)) <> ''
+            ORDER BY FieldValue");
             }
 
             return result;
@@ -512,9 +666,9 @@ namespace AttendanceSyncApp.Services
             {
                 while (reader.Read())
                 {
-                    if (reader[0] != DBNull.Value)
+                    if (reader["FieldValue"] != DBNull.Value)
                     {
-                        var value = reader[0].ToString().Trim();
+                        var value = reader["FieldValue"].ToString().Trim();
 
                         if (!string.IsNullOrWhiteSpace(value) && !list.Contains(value))
                         {
@@ -528,62 +682,99 @@ namespace AttendanceSyncApp.Services
         }
         public bool SaveEducation(string employeeCode, EmployeeEducationDto dto)
         {
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
-                int employeeId = 0;
+                string query = @"
+DECLARE @EmployeeInfoEmployeeId INT;
+DECLARE @EducationLookupId INT;
 
-                string employeeQuery = @"
-            SELECT TOP 1 Id
-            FROM dbo.Employees
-            WHERE LTRIM(RTRIM(CAST(EmployeeId AS NVARCHAR(50)))) = LTRIM(RTRIM(@EmployeeCode))";
+SELECT TOP 1 @EmployeeInfoEmployeeId = Id
+FROM dbo.EmployeeInfoEmployees
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
 
-                using (SqlCommand empCmd = new SqlCommand(employeeQuery, conn))
-                {
-                    empCmd.Parameters.AddWithValue("@EmployeeCode", employeeCode);
+SELECT TOP 1 @EducationLookupId = Id
+FROM dbo.EmployeeInfoEducations
+WHERE
+    (SourceEducationId = @EducationId)
+    OR (LTRIM(RTRIM(EducationName)) = LTRIM(RTRIM(@EducationName)));
 
-                    object result = empCmd.ExecuteScalar();
-                    if (result == null || result == DBNull.Value)
-                    {
-                        throw new Exception("Employee code not found.");
-                    }
+IF @EducationLookupId IS NULL
+BEGIN
+    SELECT TOP 1 @EducationLookupId = Id
+    FROM dbo.EmployeeInfoEducations
+    ORDER BY Id;
+END
 
-                    employeeId = Convert.ToInt32(result);
-                }
+IF @EmployeeInfoEmployeeId IS NULL
+BEGIN
+    RAISERROR('Employee not found in EmployeeInfoEmployees.', 16, 1);
+    RETURN;
+END
 
-                string query;
+IF @EducationLookupId IS NULL
+BEGIN
+    RAISERROR('Education lookup not found in EmployeeInfoEducations.', 16, 1);
+    RETURN;
+END
 
-                if (dto.Id == 0)
-                {
-                    query = @"
-                INSERT INTO dbo.EducationUnits
-                (EmployeeId, EducationId, [Group], Board, AcademicYear, AcademicInstitute, Division, CGPA)
-                VALUES
-                (@EmployeeId, @EducationId, @Group, @Board, @AcademicYear, @AcademicInstitute, @Division, @Result)";
-                }
-                else
-                {
-                    query = @"
-                UPDATE dbo.EducationUnits
-                SET
-                    EducationId = @EducationId,
-                    [Group] = @Group,
-                    Board = @Board,
-                    AcademicYear = @AcademicYear,
-                    AcademicInstitute = @AcademicInstitute,
-                    Division = @Division,
-                    CGPA = @Result
-                WHERE Id = @Id";
-                }
+IF @Id = 0
+BEGIN
+    INSERT INTO dbo.EmployeeInfoEducationInfos
+    (
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        EducationLookupId,
+        EducationId,
+        EducationName,
+        [Group],
+        Board,
+        AcademicYear,
+        AcademicInstitute,
+        Division,
+        Result
+    )
+    VALUES
+    (
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @EducationLookupId,
+        @EducationId,
+        @EducationName,
+        @Group,
+        @Board,
+        @AcademicYear,
+        @AcademicInstitute,
+        @Division,
+        @Result
+    )
+END
+ELSE
+BEGIN
+    UPDATE dbo.EmployeeInfoEducationInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeCode = @EmployeeCode,
+        EducationLookupId = @EducationLookupId,
+        EducationId = @EducationId,
+        EducationName = @EducationName,
+        [Group] = @Group,
+        Board = @Board,
+        AcademicYear = @AcademicYear,
+        AcademicInstitute = @AcademicInstitute,
+        Division = @Division,
+        Result = @Result,
+        UpdatedAt = GETDATE()
+    WHERE Id = @Id
+END";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    if (dto.Id != 0)
-                        cmd.Parameters.AddWithValue("@Id", dto.Id);
-
-                    cmd.Parameters.AddWithValue("@EmployeeId", employeeId);
+                    cmd.Parameters.AddWithValue("@Id", dto.Id);
+                    cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
                     cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
+                    cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@Board", (object)dto.Board ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AcademicYear", (object)dto.AcademicYear ?? DBNull.Value);
@@ -600,11 +791,11 @@ namespace AttendanceSyncApp.Services
 
         public bool DeleteEducation(int id)
         {
-            using (SqlConnection conn = new SqlConnection(GetConnectionString()))
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
             {
                 conn.Open();
 
-                string query = "DELETE FROM dbo.EducationUnits WHERE Id = @Id";
+                string query = "DELETE FROM dbo.EmployeeInfoEducationInfos WHERE Id = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -614,6 +805,595 @@ namespace AttendanceSyncApp.Services
             }
 
             return true;
+        }
+        public bool SaveAllEmployeeInformation(EmployeeFullInformationSaveDto dto)
+        {
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
+            {
+                conn.Open();
+
+                using (SqlTransaction transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        int employeeInfoEmployeeId = EnsureEmployeeMasterWithTransaction(dto.GeneralInfo, conn, transaction);
+
+                        int generalInfoId = SaveGeneralInfoWithTransaction(dto.GeneralInfo, employeeInfoEmployeeId, conn, transaction);
+
+
+                        // dto.AddressInfo.EmployeeId=generalInfoId;
+                        SaveAddressInfoWithTransaction(generalInfoId, dto.GeneralInfo.EmployeeCode, dto.AddressInfo, conn, transaction);
+
+                        //foreach (var item in dto.Educations)
+                        //{
+                        //    item.EmployeeId= generalInfoId;
+                        //}
+                        SyncEducationInfosWithTransaction(generalInfoId, dto.GeneralInfo.EmployeeCode, dto.Educations, conn, transaction);
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        private int EnsureEmployeeMasterWithTransaction(EmployeeInfoGeneralDto dto, SqlConnection conn, SqlTransaction transaction)
+        {
+            string query = @"
+DECLARE @EmployeeInfoEmployeeId INT;
+
+SELECT TOP 1 @EmployeeInfoEmployeeId = Id
+FROM dbo.EmployeeInfoEmployees
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+
+IF @EmployeeInfoEmployeeId IS NOT NULL
+BEGIN
+    UPDATE dbo.EmployeeInfoEmployees
+    SET
+        EmployeeName = @EmployeeName,
+        IsActive = 1
+    WHERE Id = @EmployeeInfoEmployeeId;
+
+    SELECT @EmployeeInfoEmployeeId;
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.EmployeeInfoEmployees
+    (
+        SourceEmployeeId,
+        EmployeeCode,
+        EmployeeName,
+        IsActive,
+        CreatedAt
+    )
+    VALUES
+    (
+        NULL,
+        @EmployeeCode,
+        @EmployeeName,
+        1,
+        GETDATE()
+    );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT);
+END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        private int SaveGeneralInfoWithTransaction(EmployeeInfoGeneralDto dto, int employeeInfoEmployeeId, SqlConnection conn, SqlTransaction transaction)
+        {
+            string query = @"
+DECLARE @ExistingGeneralInfoId INT;
+
+SELECT TOP 1 @ExistingGeneralInfoId = Id
+FROM dbo.EmployeeInfoGeneralInfos
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+
+IF @ExistingGeneralInfoId IS NOT NULL
+BEGIN
+    UPDATE dbo.EmployeeInfoGeneralInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeCode = @EmployeeCode,
+        EmployeeName = @EmployeeName,
+        FatherName = @FatherName,
+        MotherName = @MotherName,
+        MobileNo = @MobileNo,
+        BasicSalary = @BasicSalary,
+        DateOfBirth = @DateOfBirth,
+        DesignationId = @DesignationId,
+        DepartmentId = @DepartmentId,
+        DesignationName = @DesignationName,
+        DepartmentName = @DepartmentName,
+        BranchName = @BranchName,
+        UpdatedAt = GETDATE()
+    WHERE Id = @ExistingGeneralInfoId;
+
+    SELECT @ExistingGeneralInfoId;
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.EmployeeInfoGeneralInfos
+    (
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        EmployeeName,
+        FatherName,
+        MotherName,
+        MobileNo,
+        BasicSalary,
+        DateOfBirth,
+        DesignationId,
+        DepartmentId,
+        DesignationName,
+        DepartmentName,
+        BranchName
+    )
+    VALUES
+    (
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @EmployeeName,
+        @FatherName,
+        @MotherName,
+        @MobileNo,
+        @BasicSalary,
+        @DateOfBirth,
+        @DesignationId,
+        @DepartmentId,
+        @DesignationName,
+        @DepartmentName,
+        @BranchName
+    );
+
+    SELECT CAST(SCOPE_IDENTITY() AS INT);
+END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@EmployeeInfoEmployeeId", employeeInfoEmployeeId);
+                cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@FatherName", (object)dto.FatherName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@MotherName", (object)dto.MotherName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@MobileNo", (object)dto.MobileNo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@BasicSalary", (object)dto.BasicSalary ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DesignationId", (object)dto.DesignationId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DepartmentId", (object)dto.DepartmentId ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DesignationName", (object)dto.DesignationName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@DepartmentName", (object)dto.DepartmentName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@BranchName", (object)dto.BranchName ?? DBNull.Value);
+
+                if (string.IsNullOrWhiteSpace(dto.DateOfBirth))
+                    cmd.Parameters.AddWithValue("@DateOfBirth", DBNull.Value);
+                else
+                    cmd.Parameters.AddWithValue("@DateOfBirth", Convert.ToDateTime(dto.DateOfBirth));
+
+                return Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+        private void SaveAddressInfoWithTransaction(int generalInfoId, string employeeCode, EmployeeInfoAddressDto dto, SqlConnection conn, SqlTransaction transaction)
+        {
+            string query = @"
+DECLARE @EmployeeInfoEmployeeId INT;
+
+SELECT TOP 1 @EmployeeInfoEmployeeId = EmployeeInfoEmployeeId
+FROM dbo.EmployeeInfoGeneralInfos
+WHERE Id = @EmployeeInfoGeneralInfoId;
+
+IF EXISTS (
+    SELECT 1
+    FROM dbo.EmployeeInfoAddressInfos
+    WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+)
+BEGIN
+    UPDATE dbo.EmployeeInfoAddressInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeCode = @EmployeeCode,
+        PresentHouseVillageName = @PresentHouseVillageName,
+        PresentHouseNo = @PresentHouseNo,
+        PresentRoadNo = @PresentRoadNo,
+        PresentBlock = @PresentBlock,
+        PresentArea = @PresentArea,
+        PresentSector = @PresentSector,
+        PresentCountry = @PresentCountry,
+        PresentDivision = @PresentDivision,
+        PresentDistrict = @PresentDistrict,
+        PresentThanaUpazilla = @PresentThanaUpazilla,
+        PresentPostOffice = @PresentPostOffice,
+        PermanentHouseVillageName = @PermanentHouseVillageName,
+        PermanentHouseNo = @PermanentHouseNo,
+        PermanentRoadNo = @PermanentRoadNo,
+        PermanentBlock = @PermanentBlock,
+        PermanentArea = @PermanentArea,
+        PermanentSector = @PermanentSector,
+        PermanentCountry = @PermanentCountry,
+        PermanentDivision = @PermanentDivision,
+        PermanentDistrict = @PermanentDistrict,
+        PermanentThanaUpazilla = @PermanentThanaUpazilla,
+        PermanentPostOffice = @PermanentPostOffice,
+        UpdatedAt = GETDATE()
+    WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+END
+ELSE
+BEGIN
+    INSERT INTO dbo.EmployeeInfoAddressInfos
+    (
+        EmployeeInfoGeneralInfoId,
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        PresentHouseVillageName,
+        PresentHouseNo,
+        PresentRoadNo,
+        PresentBlock,
+        PresentArea,
+        PresentSector,
+        PresentCountry,
+        PresentDivision,
+        PresentDistrict,
+        PresentThanaUpazilla,
+        PresentPostOffice,
+        PermanentHouseVillageName,
+        PermanentHouseNo,
+        PermanentRoadNo,
+        PermanentBlock,
+        PermanentArea,
+        PermanentSector,
+        PermanentCountry,
+        PermanentDivision,
+        PermanentDistrict,
+        PermanentThanaUpazilla,
+        PermanentPostOffice
+    )
+    VALUES
+    (
+        @EmployeeInfoGeneralInfoId,
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @PresentHouseVillageName,
+        @PresentHouseNo,
+        @PresentRoadNo,
+        @PresentBlock,
+        @PresentArea,
+        @PresentSector,
+        @PresentCountry,
+        @PresentDivision,
+        @PresentDistrict,
+        @PresentThanaUpazilla,
+        @PresentPostOffice,
+        @PermanentHouseVillageName,
+        @PermanentHouseNo,
+        @PermanentRoadNo,
+        @PermanentBlock,
+        @PermanentArea,
+        @PermanentSector,
+        @PermanentCountry,
+        @PermanentDivision,
+        @PermanentDistrict,
+        @PermanentThanaUpazilla,
+        @PermanentPostOffice
+    )
+END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
+                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+
+                cmd.Parameters.AddWithValue("@PresentHouseVillageName", (object)dto.PresentHouseVillageName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentHouseNo", (object)dto.PresentHouseNo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentRoadNo", (object)dto.PresentRoadNo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentBlock", (object)dto.PresentBlock ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentArea", (object)dto.PresentArea ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentSector", (object)dto.PresentSector ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentCountry", (object)dto.PresentCountry ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentDivision", (object)dto.PresentDivision ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentDistrict", (object)dto.PresentDistrict ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentThanaUpazilla", (object)dto.PresentThanaUpazilla ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PresentPostOffice", (object)dto.PresentPostOffice ?? DBNull.Value);
+
+                cmd.Parameters.AddWithValue("@PermanentHouseVillageName", (object)dto.PermanentHouseVillageName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentHouseNo", (object)dto.PermanentHouseNo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentRoadNo", (object)dto.PermanentRoadNo ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentBlock", (object)dto.PermanentBlock ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentArea", (object)dto.PermanentArea ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentSector", (object)dto.PermanentSector ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentCountry", (object)dto.PermanentCountry ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentDivision", (object)dto.PermanentDivision ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentDistrict", (object)dto.PermanentDistrict ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentThanaUpazilla", (object)dto.PermanentThanaUpazilla ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@PermanentPostOffice", (object)dto.PermanentPostOffice ?? DBNull.Value);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private void SyncEducationInfosWithTransaction(int generalInfoId, string employeeCode, List<EmployeeEducationDto> educations, SqlConnection conn, SqlTransaction transaction)
+        {
+            if (educations == null)
+            {
+                educations = new List<EmployeeEducationDto>();
+            }
+
+            string deleteMissingQuery = @"
+    DELETE FROM dbo.EmployeeInfoEducationInfos
+    WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+      AND Id NOT IN (
+            SELECT Id
+            FROM dbo.EmployeeInfoEducationInfos
+            WHERE 1 = 0
+      )";
+
+            var incomingExistingIds = new List<int>();
+            foreach (var item in educations)
+            {
+                if (item.Id > 0)
+                {
+                    incomingExistingIds.Add(item.Id);
+                }
+            }
+
+            string deleteQuery;
+            if (incomingExistingIds.Count == 0)
+            {
+                deleteQuery = @"
+        DELETE FROM dbo.EmployeeInfoEducationInfos
+        WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId";
+            }
+            else
+            {
+                deleteQuery = $@"
+        DELETE FROM dbo.EmployeeInfoEducationInfos
+        WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+          AND Id NOT IN ({string.Join(",", incomingExistingIds)})";
+            }
+
+            using (SqlCommand deleteCmd = new SqlCommand(deleteQuery, conn, transaction))
+            {
+                deleteCmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
+                deleteCmd.ExecuteNonQuery();
+            }
+
+            foreach (var dto in educations)
+            {
+                SaveOrUpdateEducationRow(generalInfoId, employeeCode, dto, conn, transaction);
+            }
+        }
+
+        private void SaveOrUpdateEducationRow(int generalInfoId, string employeeCode, EmployeeEducationDto dto, SqlConnection conn, SqlTransaction transaction)
+        {
+            string query = @"
+DECLARE @EmployeeInfoEmployeeId INT;
+DECLARE @EducationLookupId INT;
+
+SELECT TOP 1 @EmployeeInfoEmployeeId = EmployeeInfoEmployeeId
+FROM dbo.EmployeeInfoGeneralInfos
+WHERE Id = @EmployeeInfoGeneralInfoId;
+
+SELECT TOP 1 @EducationLookupId = Id
+FROM dbo.EmployeeInfoEducations
+WHERE
+    (SourceEducationId = @EducationId)
+    OR (LTRIM(RTRIM(EducationName)) = LTRIM(RTRIM(@EducationName)));
+
+IF @EducationLookupId IS NULL
+BEGIN
+    SELECT TOP 1 @EducationLookupId = Id
+    FROM dbo.EmployeeInfoEducations
+    ORDER BY Id;
+END
+
+IF @EmployeeInfoEmployeeId IS NULL
+BEGIN
+    RAISERROR('Employee not found from general master.', 16, 1);
+    RETURN;
+END
+
+IF @Id = 0
+BEGIN
+    INSERT INTO dbo.EmployeeInfoEducationInfos
+    (
+        EmployeeInfoGeneralInfoId,
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        EducationLookupId,
+        EducationId,
+        EducationName,
+        [Group],
+        Board,
+        AcademicYear,
+        AcademicInstitute,
+        Division,
+        Result
+    )
+    VALUES
+    (
+        @EmployeeInfoGeneralInfoId,
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @EducationLookupId,
+        @EducationId,
+        @EducationName,
+        @Group,
+        @Board,
+        @AcademicYear,
+        @AcademicInstitute,
+        @Division,
+        @Result
+    )
+END
+ELSE
+BEGIN
+    UPDATE dbo.EmployeeInfoEducationInfos
+    SET
+        EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId,
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeCode = @EmployeeCode,
+        EducationLookupId = @EducationLookupId,
+        EducationId = @EducationId,
+        EducationName = @EducationName,
+        [Group] = @Group,
+        Board = @Board,
+        AcademicYear = @AcademicYear,
+        AcademicInstitute = @AcademicInstitute,
+        Division = @Division,
+        Result = @Result,
+        UpdatedAt = GETDATE()
+    WHERE Id = @Id
+END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
+                cmd.Parameters.AddWithValue("@Id", dto.Id);
+                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+                cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
+                cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Board", (object)dto.Board ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@AcademicYear", (object)dto.AcademicYear ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@AcademicInstitute", (object)dto.AcademicInstitute ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Division", (object)dto.Division ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Result", (object)dto.Result ?? DBNull.Value);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+        private void SaveEducationWithTransaction(string employeeCode, EmployeeEducationDto dto, SqlConnection conn, SqlTransaction transaction)
+        {
+            string query = @"
+DECLARE @EmployeeInfoEmployeeId INT;
+DECLARE @EducationLookupId INT;
+
+SELECT TOP 1 @EmployeeInfoEmployeeId = Id
+FROM dbo.EmployeeInfoEmployees
+WHERE LTRIM(RTRIM(EmployeeCode)) = LTRIM(RTRIM(@EmployeeCode));
+
+SELECT TOP 1 @EducationLookupId = Id
+FROM dbo.EmployeeInfoEducations
+WHERE
+    (SourceEducationId = @EducationId)
+    OR (LTRIM(RTRIM(EducationName)) = LTRIM(RTRIM(@EducationName)));
+
+IF @EducationLookupId IS NULL
+BEGIN
+    SELECT TOP 1 @EducationLookupId = Id
+    FROM dbo.EmployeeInfoEducations
+    ORDER BY Id;
+END
+
+IF @EmployeeInfoEmployeeId IS NULL
+BEGIN
+    RAISERROR('Employee not found in EmployeeInfoEmployees.', 16, 1);
+    RETURN;
+END
+
+IF @EducationLookupId IS NULL
+BEGIN
+    RAISERROR('Education lookup not found in EmployeeInfoEducations.', 16, 1);
+    RETURN;
+END
+
+IF @Id = 0
+BEGIN
+    INSERT INTO dbo.EmployeeInfoEducationInfos
+    (
+        EmployeeInfoEmployeeId,
+        EmployeeCode,
+        EducationLookupId,
+        EducationId,
+        EducationName,
+        [Group],
+        Board,
+        AcademicYear,
+        AcademicInstitute,
+        Division,
+        Result
+    )
+    VALUES
+    (
+        @EmployeeInfoEmployeeId,
+        @EmployeeCode,
+        @EducationLookupId,
+        @EducationId,
+        @EducationName,
+        @Group,
+        @Board,
+        @AcademicYear,
+        @AcademicInstitute,
+        @Division,
+        @Result
+    )
+END
+ELSE
+BEGIN
+    UPDATE dbo.EmployeeInfoEducationInfos
+    SET
+        EmployeeInfoEmployeeId = @EmployeeInfoEmployeeId,
+        EmployeeCode = @EmployeeCode,
+        EducationLookupId = @EducationLookupId,
+        EducationId = @EducationId,
+        EducationName = @EducationName,
+        [Group] = @Group,
+        Board = @Board,
+        AcademicYear = @AcademicYear,
+        AcademicInstitute = @AcademicInstitute,
+        Division = @Division,
+        Result = @Result,
+        UpdatedAt = GETDATE()
+    WHERE Id = @Id
+END";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn, transaction))
+            {
+                cmd.Parameters.AddWithValue("@Id", dto.Id);
+                cmd.Parameters.AddWithValue("@EmployeeCode", employeeCode ?? "");
+                cmd.Parameters.AddWithValue("@EducationId", dto.EducationId);
+                cmd.Parameters.AddWithValue("@EducationName", (object)dto.EducationName ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Group", (object)dto.Group ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Board", (object)dto.Board ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@AcademicYear", (object)dto.AcademicYear ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@AcademicInstitute", (object)dto.AcademicInstitute ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Division", (object)dto.Division ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@Result", (object)dto.Result ?? DBNull.Value);
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+        private string GetEmployeeCodeById(int employeeId, SqlConnection conn)
+        {
+            string code = null;
+
+            string query = @"
+        SELECT EmployeeCode
+        FROM dbo.EmployeeInfoEmployees
+        WHERE Id = @Id";
+
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("@Id", employeeId);
+
+                object result = cmd.ExecuteScalar();
+                if (result != null && result != DBNull.Value)
+                {
+                    code = result.ToString();
+                }
+            }
+
+            return code;
         }
     }
 }
