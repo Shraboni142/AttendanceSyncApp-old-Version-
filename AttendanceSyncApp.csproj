@@ -336,6 +336,7 @@
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoAddressDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoDropdownDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EmployeeInfoGeneralDto.cs" />
+    <Compile Include="Models\DTOs\EmployeeInformation\EmployeeProfileListDto.cs" />
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
     <Compile Include="Models\DTOs\Reports\BranchDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
@@ -555,6 +556,7 @@
     <Content Include="Views\AdminEmployeeJobCardReport\AllEmployeeHtmlReport.cshtml" />
     <Content Include="Views\AdminEmployeeJobCardReport\AllEmployeeExcelPreview.cshtml" />
     <Content Include="Views\AdminEmployeeInformation\Index.cshtml" />
+    <Content Include="Views\AdminEmployeeInformation\EmployeeProfile.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

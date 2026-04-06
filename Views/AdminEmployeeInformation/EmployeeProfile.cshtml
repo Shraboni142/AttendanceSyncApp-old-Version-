@@ -1,0 +1,50 @@
+﻿@model List<AttendanceSyncApp.Models.DTOs.EmployeeInformation.EmployeeProfileListDto>
+
+@{
+    ViewBag.Title = "Employee Profile";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h2 style="margin-bottom:20px;">Employee Profile</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Employee Code</th>
+                        <th>Employee Name</th>
+                        <th>Home / Address</th>
+                        <th style="width:120px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.EmployeeCode</td>
+                                <td>@item.EmployeeName</td>
+                                <td>@item.HomeAddress</td>
+                                <td>
+                                    <a href="@Url.Action("EditProfile", "AdminEmployeeInformation", new { employeeCode = item.EmployeeCode })"
+                                       class="btn btn-sm btn-primary">
+                                        Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" style="text-align:center;">No employee profile found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

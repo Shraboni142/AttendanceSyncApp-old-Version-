@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using AttendanceSyncApp.Models.DTOs.EmployeeInformation;
 
+
 namespace AttendanceSyncApp.Services.Interfaces
 {
     public interface IAdminEmployeeInformationService
@@ -20,5 +21,7 @@ namespace AttendanceSyncApp.Services.Interfaces
         bool DeleteEducation(int id);
         List<DropdownItemDto> GetDesignations();
         List<DropdownItemDto> GetDepartments();
+        List<EmployeeProfileListDto> GetEmployeeProfiles();
+        EmployeeFullInformationSaveDto GetEmployeeFullInformationByCode(string employeeCode);
     }
 }

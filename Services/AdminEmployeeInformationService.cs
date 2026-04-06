@@ -837,6 +837,43 @@ END";
                 }
             }
         }
+        public List<EmployeeProfileListDto> GetEmployeeProfiles()
+        {
+            var result = new List<EmployeeProfileListDto>();
+
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
+            {
+                conn.Open();
+
+                string query = @"
+        SELECT
+            g.Id AS GeneralInfoId,
+            g.EmployeeCode,
+            g.EmployeeName,
+            ISNULL(a.PresentHouseVillageName, '') AS HomeAddress
+        FROM dbo.EmployeeInfoGeneralInfos g
+        LEFT JOIN dbo.EmployeeInfoAddressInfos a
+            ON a.EmployeeInfoGeneralInfoId = g.Id
+        ORDER BY g.Id DESC";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        result.Add(new EmployeeProfileListDto
+                        {
+                            GeneralInfoId = Convert.ToInt32(reader["GeneralInfoId"]),
+                            EmployeeCode = reader["EmployeeCode"]?.ToString(),
+                            EmployeeName = reader["EmployeeName"]?.ToString(),
+                            HomeAddress = reader["HomeAddress"]?.ToString()
+                        });
+                    }
+                }
+            }
+
+            return result;
+        }
 
         private int EnsureEmployeeMasterWithTransaction(EmployeeInfoGeneralDto dto, SqlConnection conn, SqlTransaction transaction)
         {
@@ -888,6 +925,69 @@ END";
             }
         }
 
+        public EmployeeFullInformationSaveDto GetEmployeeFullInformationByCode(string employeeCode)
+        {
+            var result = new EmployeeFullInformationSaveDto
+            {
+                GeneralInfo = new EmployeeInfoGeneralDto(),
+                AddressInfo = new EmployeeInfoAddressDto(),
+                Educations = new List<EmployeeEducationDto>()
+            };
+
+            using (SqlConnection conn = new SqlConnection(GetSmartToolsConnectionString()))
+            {
+                conn.Open();
+
+                result.GeneralInfo = GetEmployeeGeneralInfo(employeeCode);
+                result.AddressInfo = GetEmployeeAddressInfo(employeeCode);
+
+                int generalInfoId = GetGeneralInfoIdByEmployeeCode(employeeCode, conn);
+
+                if (generalInfoId > 0)
+                {
+                    string query = @"
+            SELECT
+                Id,
+                EducationId,
+                EducationName,
+                [Group],
+                Board,
+                AcademicYear,
+                AcademicInstitute,
+                Division,
+                Result
+            FROM dbo.EmployeeInfoEducationInfos
+            WHERE EmployeeInfoGeneralInfoId = @EmployeeInfoGeneralInfoId
+            ORDER BY Id";
+
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@EmployeeInfoGeneralInfoId", generalInfoId);
+
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                result.Educations.Add(new EmployeeEducationDto
+                                {
+                                    Id = Convert.ToInt32(reader["Id"]),
+                                    EducationId = reader["EducationId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["EducationId"]),
+                                    EducationName = reader["EducationName"]?.ToString(),
+                                    Group = reader["Group"]?.ToString(),
+                                    Board = reader["Board"]?.ToString(),
+                                    AcademicYear = reader["AcademicYear"]?.ToString(),
+                                    AcademicInstitute = reader["AcademicInstitute"]?.ToString(),
+                                    Division = reader["Division"]?.ToString(),
+                                    Result = reader["Result"]?.ToString()
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
         private int SaveGeneralInfoWithTransaction(EmployeeInfoGeneralDto dto, int employeeInfoEmployeeId, SqlConnection conn, SqlTransaction transaction)
         {
             string query = @"

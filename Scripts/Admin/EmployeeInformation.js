@@ -16,6 +16,12 @@ $(document).ready(function () {
     loadEmployees();
     loadEducationDropdown();
     loadEducationFieldDropdowns();
+    var pageEmployeeCode = ($('#PageEmployeeCode').val() || '').trim();
+    if (pageEmployeeCode) {
+        $('#EmployeeCode').val(pageEmployeeCode);
+        loadEmployeeGeneralInfo(pageEmployeeCode);
+        loadEmployeeAddressInfo(pageEmployeeCode);
+    }
     loadDesignations();
     loadDepartments();
 

@@ -15,9 +15,26 @@ namespace AttendanceSyncApp.Controllers
             _service = new AdminEmployeeInformationService();
         }
 
-        public ActionResult Index()
+        public ActionResult Index(string employeeCode = "")
         {
+            ViewBag.EmployeeCode = employeeCode;
             return View();
+        }
+        public ActionResult EmployeeProfile()
+        {
+            var data = _service.GetEmployeeProfiles();
+            return View(data);
+        }
+
+        [HttpGet]
+        public ActionResult EditProfile(string employeeCode)
+        {
+            if (string.IsNullOrWhiteSpace(employeeCode))
+            {
+                return RedirectToAction("EmployeeProfile");
+            }
+
+            return RedirectToAction("Index", new { employeeCode = employeeCode });
         }
 
         [HttpGet]

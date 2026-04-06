@@ -52,6 +52,9 @@
                         <i class="fa fa-id-card"></i> Employees Information
                     </a>
                 </li>
+                <li>
+                    <a href="@Url.Action("EmployeeProfile", "AdminEmployeeInformation")">Employee Profile</a>
+                </li>
                 <li class="@(ViewBag.ActiveMenu == "Companies" ? "active" : "")">
                     <a href="@Url.Action("Index", "AdminCompanies")">Companies</a>
                 </li>
