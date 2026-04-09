@@ -267,7 +267,7 @@ function renderEducationRows() {
                 '<td><select class="form-control edu-division">' + getStringOptions(educationFieldDropdowns.Divisions, item.Division) + '</select></td>' +
                 '<td><select class="form-control edu-result">' + getStringOptions(educationFieldDropdowns.Results, item.Result) + '</select></td>' +
                 '<td>' +
-                '<button type="button" class="btn btn-sm btn-success me-1" onclick="saveEducationRow(' + index + ')">LOCAL ONLY</button>'
+             
                 '<button type="button" class="btn btn-sm btn-danger" onclick="deleteEducationRow(' + index + ')">Delete</button>' +
                 '</td>' +
                 '</tr>';
@@ -283,7 +283,7 @@ function renderEducationRows() {
                 '<td>' + htmlEncode(item.Division) + '</td>' +
                 '<td>' + htmlEncode(item.Result) + '</td>' +
                 '<td>' +
-                '<button type="button" class="btn btn-sm btn-primary me-1" onclick="editEducationRow(' + index + ')">Edit</button>' +
+               
                 '<button type="button" class="btn btn-sm btn-danger" onclick="deleteEducationRow(' + index + ')">Delete</button>' +
                 '</td>' +
                 '</tr>';

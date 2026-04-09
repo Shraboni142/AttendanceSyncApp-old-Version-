@@ -14,6 +14,7 @@ namespace AttandanceSyncApp.Controllers
         }
 
         // GET: AdminDashboard/Index
+
         // GET: AdminDashboard/Index
         public ActionResult Index()
         {

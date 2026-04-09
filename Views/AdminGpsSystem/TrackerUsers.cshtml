@@ -1,0 +1,194 @@
+﻿@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>GPS Tracker Users</h3>
+            <hr />
+
+            <div class="card" style="padding:20px; margin-bottom:20px;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label>Employee Code</label>
+                        <input type="text" id="txtEmployeeCode" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label>Employee Name <span style="color:red;">*</span></label>
+                        <input type="text" id="txtEmployeeName" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label>Mobile No <span style="color:red;">*</span></label>
+                        <input type="text" id="txtMobileNo" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:15px;">
+                    <div class="col-md-4">
+                        <label>Department Name</label>
+                        <input type="text" id="txtDepartmentName" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label>Branch Name</label>
+                        <input type="text" id="txtBranchName" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label style="display:block;">Options</label>
+                        <label style="margin-right:15px;">
+                            <input type="checkbox" id="chkIsActive" checked="checked" /> Active
+                        </label>
+                        <label style="margin-right:15px;">
+                            <input type="checkbox" id="chkIsLiveTrackingEnabled" checked="checked" /> Live Tracking
+                        </label>
+                        <label>
+                            <input type="checkbox" id="chkIsFieldVisitEnabled" checked="checked" /> Field Visit
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row" style="margin-top:20px;">
+                    <div class="col-md-12">
+                        <button type="button" id="btnSaveTrackerUser" class="btn btn-primary">Save Tracker User</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <a href="@Url.Action("FieldVisitEntry", "AdminGpsSystem")" class="btn btn-success">
+                    Open Field Visit GPS Entry
+                </a>
+            </div>
+
+            <div class="card" style="padding:20px;">
+                <h4>Saved Tracker Users</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>SL</th>
+                                <th>Employee Code</th>
+                                <th>Employee Name</th>
+                                <th>Mobile No</th>
+                                <th>Department</th>
+                                <th>Branch</th>
+                                <th>Active</th>
+                                <th>Live Tracking</th>
+                                <th>Field Visit</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trackerUserTableBody">
+                            <tr>
+                                <td colspan="10" class="text-center">No data found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        alert("inline script loaded");
+
+        loadTrackerUsers();
+
+        var btn = document.getElementById("btnSaveTrackerUser");
+        if (btn) {
+            btn.addEventListener("click", function () {
+                alert("save button clicked");
+
+                var dto = {
+                    EmployeeCode: document.getElementById("txtEmployeeCode").value,
+                    EmployeeName: document.getElementById("txtEmployeeName").value,
+                    MobileNo: document.getElementById("txtMobileNo").value,
+                    DepartmentName: document.getElementById("txtDepartmentName").value,
+                    BranchName: document.getElementById("txtBranchName").value,
+                    IsActive: document.getElementById("chkIsActive").checked,
+                    IsLiveTrackingEnabled: document.getElementById("chkIsLiveTrackingEnabled").checked,
+                    IsFieldVisitEnabled: document.getElementById("chkIsFieldVisitEnabled").checked
+                };
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/AdminGpsSystem/SaveTrackerUser", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState === 4) {
+                        alert("status = " + xhr.status);
+
+                        if (xhr.status === 200) {
+                            alert(xhr.responseText);
+                            loadTrackerUsers();
+                        } else {
+                            alert("save failed");
+                            console.log(xhr.responseText);
+                        }
+                    }
+                };
+
+                var body =
+                    "EmployeeCode=" + encodeURIComponent(dto.EmployeeCode) +
+                    "&EmployeeName=" + encodeURIComponent(dto.EmployeeName) +
+                    "&MobileNo=" + encodeURIComponent(dto.MobileNo) +
+                    "&DepartmentName=" + encodeURIComponent(dto.DepartmentName) +
+                    "&BranchName=" + encodeURIComponent(dto.BranchName) +
+                    "&IsActive=" + encodeURIComponent(dto.IsActive) +
+                    "&IsLiveTrackingEnabled=" + encodeURIComponent(dto.IsLiveTrackingEnabled) +
+                    "&IsFieldVisitEnabled=" + encodeURIComponent(dto.IsFieldVisitEnabled);
+
+                xhr.send(body);
+            });
+        }
+    });
+
+    function loadTrackerUsers() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/AdminGpsSystem/GetTrackerUsers", true);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var html = "";
+
+                    if (!data || data.length === 0) {
+                        html = '<tr><td colspan="10" class="text-center">No data found.</td></tr>';
+                    } else {
+                        for (var i = 0; i < data.length; i++) {
+                            html += "<tr>";
+                            html += "<td>" + (i + 1) + "</td>";
+                            html += "<td>" + nullToText(data[i].EmployeeCode) + "</td>";
+                            html += "<td>" + nullToText(data[i].EmployeeName) + "</td>";
+                            html += "<td>" + nullToText(data[i].MobileNo) + "</td>";
+                            html += "<td>" + nullToText(data[i].DepartmentName) + "</td>";
+                            html += "<td>" + nullToText(data[i].BranchName) + "</td>";
+                            html += "<td>" + yesNoText(data[i].IsActive) + "</td>";
+                            html += "<td>" + yesNoText(data[i].IsLiveTrackingEnabled) + "</td>";
+                            html += "<td>" + yesNoText(data[i].IsFieldVisitEnabled) + "</td>";
+                            html += "<td>" + nullToText(data[i].CreatedAtText) + "</td>";
+                            html += "</tr>";
+                        }
+                    }
+
+                    document.getElementById("trackerUserTableBody").innerHTML = html;
+                } else {
+                    document.getElementById("trackerUserTableBody").innerHTML =
+                        '<tr><td colspan="10" class="text-center">Failed to load data.</td></tr>';
+                }
+            }
+        };
+
+        xhr.send();
+    }
+
+    function nullToText(value) {
+        return value == null ? "" : value;
+    }
+
+    function yesNoText(value) {
+        return value ? "Yes" : "No";
+    }
+</script>

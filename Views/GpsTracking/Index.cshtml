@@ -1,0 +1,214 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" style="margin-top:30px;">
+    <h3>Field Visit GPS Entry</h3>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>Mobile No <span style="color:red;">*</span></label>
+            <input type="text" id="txtMobileNo" class="form-control" />
+        </div>
+        <div class="col-md-6" style="padding-top:25px;">
+            <button type="button" id="btnLoadTracker" class="btn btn-info">Load Tracker User</button>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-4">
+            <label>Employee Code</label>
+            <input type="text" id="txtEmployeeCode" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Employee Name</label>
+            <input type="text" id="txtEmployeeName" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Branch Name</label>
+            <input type="text" id="txtBranchName" class="form-control" readonly />
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-4">
+            <label>Visit Purpose</label>
+            <select id="ddlVisitPurpose" class="form-control">
+                <option value="">-- Select --</option>
+                <option value="Client Visit">Client Visit</option>
+                <option value="Collection">Collection</option>
+                <option value="Recovery">Recovery</option>
+                <option value="Follow Up">Follow Up</option>
+                <option value="Office Outside Work">Office Outside Work</option>
+                <option value="Others">Others</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label>Client Name</label>
+            <input type="text" id="txtClientName" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label>Collection No</label>
+            <input type="text" id="txtCollectionNo" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-12">
+            <label>Remarks</label>
+            <textarea id="txtRemarks" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-4">
+            <label>Latitude</label>
+            <input type="text" id="txtLatitude" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Longitude</label>
+            <input type="text" id="txtLongitude" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Accuracy (Meter)</label>
+            <input type="text" id="txtAccuracy" class="form-control" readonly />
+        </div>
+    </div>
+
+    <input type="hidden" id="hdnTrackerUserId" />
+
+    <div class="row" style="margin-top:20px;">
+        <div class="col-md-12">
+            <button type="button" id="btnGetLocation" class="btn btn-warning">Get Current Location</button>
+            <button type="button" id="btnSaveFieldVisit" class="btn btn-success">Save Field Visit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("btnLoadTracker").addEventListener("click", loadTrackerUser);
+        document.getElementById("btnGetLocation").addEventListener("click", getCurrentLocation);
+        document.getElementById("btnSaveFieldVisit").addEventListener("click", saveFieldVisit);
+    });
+
+    function loadTrackerUser() {
+        var mobileNo = document.getElementById("txtMobileNo").value;
+
+        if (!mobileNo) {
+            alert("Please enter mobile number.");
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/GpsTracking/GetTrackerUserByMobileNo?mobileNo=" + encodeURIComponent(mobileNo), true);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+
+                    if (!data) {
+                        alert("No active tracker user found for this mobile number.");
+                        return;
+                    }
+
+                    document.getElementById("hdnTrackerUserId").value = data.Id || "";
+                    document.getElementById("txtEmployeeCode").value = data.EmployeeCode || "";
+                    document.getElementById("txtEmployeeName").value = data.EmployeeName || "";
+                    document.getElementById("txtBranchName").value = data.BranchName || "";
+
+                    alert("Tracker user loaded successfully.");
+                } else {
+                    alert("Failed to load tracker user.");
+                }
+            }
+        };
+
+        xhr.send();
+    }
+
+    function getCurrentLocation() {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by this browser.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                document.getElementById("txtLatitude").value = position.coords.latitude;
+                document.getElementById("txtLongitude").value = position.coords.longitude;
+                document.getElementById("txtAccuracy").value = position.coords.accuracy || "";
+                alert("Location captured successfully.");
+            },
+            function (error) {
+                alert("Failed to get location. Please allow GPS permission.");
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function saveFieldVisit() {
+        var trackerUserId = document.getElementById("hdnTrackerUserId").value;
+        var mobileNo = document.getElementById("txtMobileNo").value;
+        var employeeCode = document.getElementById("txtEmployeeCode").value;
+        var employeeName = document.getElementById("txtEmployeeName").value;
+        var visitPurpose = document.getElementById("ddlVisitPurpose").value;
+        var clientName = document.getElementById("txtClientName").value;
+        var collectionNo = document.getElementById("txtCollectionNo").value;
+        var remarks = document.getElementById("txtRemarks").value;
+        var latitude = document.getElementById("txtLatitude").value;
+        var longitude = document.getElementById("txtLongitude").value;
+        var accuracy = document.getElementById("txtAccuracy").value;
+
+        if (!trackerUserId) {
+            alert("Please load tracker user first.");
+            return;
+        }
+
+        if (!mobileNo) {
+            alert("Mobile No is required.");
+            return;
+        }
+
+        if (!latitude || !longitude) {
+            alert("Please get current location first.");
+            return;
+        }
+
+        var body =
+            "TrackerUserId=" + encodeURIComponent(trackerUserId) +
+            "&MobileNo=" + encodeURIComponent(mobileNo) +
+            "&EmployeeCode=" + encodeURIComponent(employeeCode) +
+            "&EmployeeName=" + encodeURIComponent(employeeName) +
+            "&VisitPurpose=" + encodeURIComponent(visitPurpose) +
+            "&ClientName=" + encodeURIComponent(clientName) +
+            "&CollectionNo=" + encodeURIComponent(collectionNo) +
+            "&Remarks=" + encodeURIComponent(remarks) +
+            "&Latitude=" + encodeURIComponent(latitude) +
+            "&Longitude=" + encodeURIComponent(longitude) +
+            "&AccuracyMeter=" + encodeURIComponent(accuracy);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/GpsTracking/SaveFieldVisit", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var response = JSON.parse(xhr.responseText);
+                    alert(response.message);
+                } else {
+                    alert("Failed to save field visit.");
+                }
+            }
+        };
+
+        xhr.send(body);
+    }
+</script>

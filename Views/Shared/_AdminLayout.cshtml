@@ -40,6 +40,24 @@
                         User Approval
                     </a>
                 </li>
+                <li class="@((ViewBag.ActiveMenu == "GpsSystem" || ViewBag.ActiveMenu == "GpsTrackerUsers" || ViewBag.ActiveMenu == "GpsVisitHistory" || ViewBag.ActiveMenu == "GpsLiveMap") ? "active" : "")">
+                    <a href="#gpsSystemSubmenu" data-bs-toggle="collapse"
+                       aria-expanded="@((ViewBag.ActiveMenu == "GpsSystem" || ViewBag.ActiveMenu == "GpsTrackerUsers" || ViewBag.ActiveMenu == "GpsVisitHistory" || ViewBag.ActiveMenu == "GpsLiveMap") ? "true" : "false")"
+                       class="dropdown-toggle">GPS System</a>
+
+                    <ul class="collapse list-unstyled @((ViewBag.ActiveMenu == "GpsSystem" || ViewBag.ActiveMenu == "GpsTrackerUsers" || ViewBag.ActiveMenu == "GpsVisitHistory" || ViewBag.ActiveMenu == "GpsLiveMap") ? "show" : "")"
+                        id="gpsSystemSubmenu" style="padding-left: 20px;">
+                        <li class="@(ViewBag.ActiveMenu == "GpsTrackerUsers" ? "active" : "")">
+                            <a href="@Url.Action("TrackerUsers", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Tracker Users</a>
+                        </li>
+                        <li class="@(ViewBag.ActiveMenu == "GpsVisitHistory" ? "active" : "")">
+                            <a href="@Url.Action("VisitHistory", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Field Visit History</a>
+                        </li>
+                        <li class="@(ViewBag.ActiveMenu == "GpsLiveMap" ? "active" : "")">
+                            <a href="@Url.Action("LiveMap", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Live Tracking Map</a>
+                        </li>
+                    </ul>
+                </li>
 
                 <li class="@(ViewBag.ActiveMenu == "LoginSessions" ? "active" : "")">
                     <a href="@Url.Action("LoginSessions", "AdminSessions")">Login Sessions</a>

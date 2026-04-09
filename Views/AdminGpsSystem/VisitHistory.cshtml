@@ -1,0 +1,96 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Field Visit History</h3>
+            <hr />
+
+            <div class="card" style="padding:20px;">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>SL</th>
+                                <th>Employee Code</th>
+                                <th>Employee Name</th>
+                                <th>Mobile No</th>
+                                <th>Visit Purpose</th>
+                                <th>Client Name</th>
+                                <th>Collection No</th>
+                                <th>Remarks</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Accuracy</th>
+                                <th>Visit Date Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fieldVisitHistoryBody">
+                            <tr>
+                                <td colspan="12" class="text-center">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        loadFieldVisitHistory();
+    });
+
+    function loadFieldVisitHistory() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/AdminGpsSystem/GetFieldVisitHistory", true);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                var html = "";
+
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+
+                    if (data.error) {
+                        html = '<tr><td colspan="12" class="text-center" style="color:red;">' + data.message + '</td></tr>';
+                    }
+                    else if (!data || data.length === 0) {
+                        html = '<tr><td colspan="12" class="text-center">No data found.</td></tr>';
+                    } else {
+                        for (var i = 0; i < data.length; i++) {
+                            html += "<tr>";
+                            html += "<td>" + (i + 1) + "</td>";
+                            html += "<td>" + nullToText(data[i].EmployeeCode) + "</td>";
+                            html += "<td>" + nullToText(data[i].EmployeeName) + "</td>";
+                            html += "<td>" + nullToText(data[i].MobileNo) + "</td>";
+                            html += "<td>" + nullToText(data[i].VisitPurpose) + "</td>";
+                            html += "<td>" + nullToText(data[i].ClientName) + "</td>";
+                            html += "<td>" + nullToText(data[i].CollectionNo) + "</td>";
+                            html += "<td>" + nullToText(data[i].Remarks) + "</td>";
+                            html += "<td>" + nullToText(data[i].Latitude) + "</td>";
+                            html += "<td>" + nullToText(data[i].Longitude) + "</td>";
+                            html += "<td>" + nullToText(data[i].AccuracyMeter) + "</td>";
+                            html += "<td>" + nullToText(data[i].VisitDateTimeText) + "</td>";
+                            html += "</tr>";
+                        }
+                    }
+                } else {
+                    html = '<tr><td colspan="12" class="text-center">Failed to load data. Status: ' + xhr.status + '</td></tr>';
+                }
+
+                document.getElementById("fieldVisitHistoryBody").innerHTML = html;
+            }
+        };
+
+        xhr.send();
+    }
+
+    function nullToText(value) {
+        return value == null ? "" : value;
+    }
+</script>
