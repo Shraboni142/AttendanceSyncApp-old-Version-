@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -26,11 +25,12 @@
                                 <th>Longitude</th>
                                 <th>Accuracy</th>
                                 <th>Visit Date Time</th>
+                                <th>Map</th>
                             </tr>
                         </thead>
                         <tbody id="fieldVisitHistoryBody">
                             <tr>
-                                <td colspan="12" class="text-center">Loading...</td>
+                                <td colspan="13" class="text-center">Loading...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -57,10 +57,10 @@
                     var data = JSON.parse(xhr.responseText);
 
                     if (data.error) {
-                        html = '<tr><td colspan="12" class="text-center" style="color:red;">' + data.message + '</td></tr>';
+                        html = '<tr><td colspan="13" class="text-center" style="color:red;">' + data.message + '</td></tr>';
                     }
                     else if (!data || data.length === 0) {
-                        html = '<tr><td colspan="12" class="text-center">No data found.</td></tr>';
+                        html = '<tr><td colspan="13" class="text-center">No data found.</td></tr>';
                     } else {
                         for (var i = 0; i < data.length; i++) {
                             html += "<tr>";
@@ -76,11 +76,12 @@
                             html += "<td>" + nullToText(data[i].Longitude) + "</td>";
                             html += "<td>" + nullToText(data[i].AccuracyMeter) + "</td>";
                             html += "<td>" + nullToText(data[i].VisitDateTimeText) + "</td>";
+                            html += "<td><a href='https://www.google.com/maps/search/?api=1&query=" + data[i].Latitude + "," + data[i].Longitude + "' target='_blank' class='btn btn-sm btn-info'>Open Map</a></td>";
                             html += "</tr>";
                         }
                     }
                 } else {
-                    html = '<tr><td colspan="12" class="text-center">Failed to load data. Status: ' + xhr.status + '</td></tr>';
+                    html = '<tr><td colspan="13" class="text-center">Failed to load data. Status: ' + xhr.status + '</td></tr>';
                 }
 
                 document.getElementById("fieldVisitHistoryBody").innerHTML = html;

@@ -10,7 +10,7 @@ namespace AttendanceSyncApp.Services
     {
         private string GetSmartToolsConnectionString()
         {
-            return "Server=192.168.14.100;Database=Smart_Tools;User Id=intran;Password=!ntr@n321;Encrypt=False;TrustServerCertificate=True;";
+            return "Server=182.163.112.216;Database=Smart_Tools;User Id=intran;Password=!ntr@n321;Encrypt=False;TrustServerCertificate=True;";
         }
 
         public List<EmployeeInfoDropdownDto> GetEmployees()

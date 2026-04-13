@@ -177,6 +177,7 @@
     <Content Include="Scripts\Admin\DatabaseConfigurations.js" />
     <Content Include="Scripts\Admin\EmployeeInformation.js" />
     <Content Include="Scripts\Admin\Employees.js" />
+    <Content Include="Scripts\Admin\GpsLiveMap.js" />
     <Content Include="Scripts\Admin\GpsSystem.js" />
     <Content Include="Scripts\Admin\LoginSessions.js" />
     <Content Include="Scripts\Admin\SalaryGarbge\DatabaseAccess.js" />
@@ -204,6 +205,8 @@
     <Content Include="Scripts\BranchReprocess\BranchReprocess.js" />
     <Content Include="Scripts\Common.js" />
     <Content Include="Scripts\ConcurrentSimulation\ConcurrentSimulation.js" />
+    <Content Include="Scripts\GpsTracking\GpsFieldVisitLocationFix.js" />
+    <Content Include="Scripts\GpsTracking\GpsLiveTracking.js" />
     <Content Include="Scripts\GpsTracking\GpsTracking.js" />
     <Content Include="Scripts\jquery-3.7.1.js" />
     <Content Include="Scripts\jquery-3.7.1.min.js" />

@@ -11,5 +11,8 @@ namespace AttendanceSyncApp.Services.Interfaces
         GpsTrackerUserDto GetTrackerUserByMobileNo(string mobileNo);
         bool SaveFieldVisit(GpsFieldVisitSaveDto dto, string deviceInfo, string ipAddress);
         List<GpsVisitHistoryDto> GetFieldVisitHistory();
+        List<GpsLiveLocationDto> GetCurrentLiveLocations();
+        bool SaveLiveLocation(GpsLiveLocationSaveDto dto);
+      
     }
 }

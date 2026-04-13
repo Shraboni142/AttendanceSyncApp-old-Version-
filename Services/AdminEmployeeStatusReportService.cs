@@ -93,7 +93,7 @@ LEFT JOIN dbo.Locations l ON e.LocationId = l.Id
 
         private string GetServerIp(int serverId)
         {
-            return "192.168.14.100";
+            return "182.163.112.216";
         }
     }
 }

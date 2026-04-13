@@ -1,6 +1,7 @@
 ﻿using AttendanceSyncApp.Models.DTOs.GpsSystem;
 using AttendanceSyncApp.Services;
 using AttendanceSyncApp.Services.Interfaces;
+using System;
 using System.Web.Mvc;
 
 namespace AttendanceSyncApp.Controllers
@@ -19,6 +20,28 @@ namespace AttendanceSyncApp.Controllers
             ViewBag.Title = "GPS Tracking";
             return View();
         }
+        [HttpGet]
+        public JsonResult GetCurrentLiveLocations()
+        {
+            try
+            {
+                var data = _gpsSystemService.GetCurrentLiveLocations();
+
+                return Json(new
+                {
+                    success = true,
+                    data = data
+                }, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                }, JsonRequestBehavior.AllowGet);
+            }
+        }
 
         [HttpGet]
         public JsonResult GetTrackerUserByMobileNo(string mobileNo)
@@ -26,7 +49,31 @@ namespace AttendanceSyncApp.Controllers
             var data = _gpsSystemService.GetTrackerUserByMobileNo(mobileNo);
             return Json(data, JsonRequestBehavior.AllowGet);
         }
+        [HttpPost]
+        public JsonResult SaveLiveLocation(GpsLiveLocationSaveDto dto)
+        {
+            try
+            {
+                dto.IpAddress = Request.UserHostAddress;
+                dto.DeviceInfo = Request.UserAgent;
 
+                var success = _gpsSystemService.SaveLiveLocation(dto);
+
+                return Json(new
+                {
+                    success = success,
+                    message = success ? "Live location saved successfully." : "Failed to save live location."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
         [HttpPost]
         public JsonResult SaveFieldVisit(GpsFieldVisitSaveDto dto)
         {

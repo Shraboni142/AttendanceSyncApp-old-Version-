@@ -249,7 +249,122 @@ namespace AttendanceSyncApp.Services
                 }
             }
         }
+        public bool SaveLiveLocation(GpsLiveLocationSaveDto dto)
+        {
+            using (SqlConnection conn = new SqlConnection(GetAppConnectionString()))
+            {
+                string query = @"
+            INSERT INTO dbo.GpsLiveTrackingLogs
+            (
+                TrackerUserId,
+                MobileNo,
+                EmployeeCode,
+                EmployeeName,
+                Latitude,
+                Longitude,
+                AccuracyMeter,
+                DeviceInfo,
+                IpAddress,
+                EntryTime,
+                IsActive
+            )
+            VALUES
+            (
+                @TrackerUserId,
+                @MobileNo,
+                @EmployeeCode,
+                @EmployeeName,
+                @Latitude,
+                @Longitude,
+                @AccuracyMeter,
+                @DeviceInfo,
+                @IpAddress,
+                GETDATE(),
+                1
+            )";
 
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@TrackerUserId", dto.TrackerUserId);
+                    cmd.Parameters.AddWithValue("@MobileNo", (object)dto.MobileNo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@Latitude", dto.Latitude);
+                    cmd.Parameters.AddWithValue("@Longitude", dto.Longitude);
+                    cmd.Parameters.AddWithValue("@AccuracyMeter", (object)dto.AccuracyMeter ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@DeviceInfo", (object)dto.DeviceInfo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@IpAddress", (object)dto.IpAddress ?? DBNull.Value);
+
+                    conn.Open();
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+        public List<GpsLiveLocationDto> GetCurrentLiveLocations()
+        {
+            var result = new List<GpsLiveLocationDto>();
+
+            using (SqlConnection conn = new SqlConnection(GetAppConnectionString()))
+            {
+                string query = @"
+            ;WITH CTE AS
+            (
+                SELECT 
+                    TrackerUserId,
+                    MobileNo,
+                    EmployeeCode,
+                    EmployeeName,
+                    Latitude,
+                    Longitude,
+                    AccuracyMeter,
+                    EntryTime,
+                    ROW_NUMBER() OVER (PARTITION BY MobileNo ORDER BY EntryTime DESC) AS RN
+                FROM dbo.GpsLiveTrackingLogs
+                WHERE IsActive = 1
+                  AND EntryTime >= DATEADD(MINUTE, -5, GETDATE())
+            )
+            SELECT
+                TrackerUserId,
+                MobileNo,
+                EmployeeCode,
+                EmployeeName,
+                Latitude,
+                Longitude,
+                AccuracyMeter,
+                EntryTime
+            FROM CTE
+            WHERE RN = 1
+            ORDER BY EntryTime DESC;";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    conn.Open();
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            result.Add(new GpsLiveLocationDto
+                            {
+                                TrackerUserId = reader["TrackerUserId"] != DBNull.Value ? Convert.ToInt32(reader["TrackerUserId"]) : 0,
+                                MobileNo = reader["MobileNo"]?.ToString(),
+                                EmployeeCode = reader["EmployeeCode"]?.ToString(),
+                                EmployeeName = reader["EmployeeName"]?.ToString(),
+                                Latitude = Convert.ToDecimal(reader["Latitude"]),
+                                Longitude = Convert.ToDecimal(reader["Longitude"]),
+                                AccuracyMeter = reader["AccuracyMeter"] != DBNull.Value ? Convert.ToDecimal(reader["AccuracyMeter"]) : (decimal?)null,
+                                EntryTime = Convert.ToDateTime(reader["EntryTime"])
+                            });
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+        private string GetAppConnectionString()
+        {
+            return ConfigurationManager.ConnectionStrings["AttandanceSyncConnection"].ConnectionString;
+        }
         public List<GpsVisitHistoryDto> GetFieldVisitHistory()
         {
             var list = new List<GpsVisitHistoryDto>();

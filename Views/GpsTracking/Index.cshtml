@@ -83,6 +83,16 @@
             <button type="button" id="btnGetLocation" class="btn btn-warning">Get Current Location</button>
             <button type="button" id="btnSaveFieldVisit" class="btn btn-success">Save Field Visit</button>
         </div>
+
+    </div>
+    <div class="mt-3">
+        <button type="button" id="btnStartLiveTracking" class="btn btn-primary">
+            Start Live Tracking
+        </button>
+
+        <button type="button" id="btnStopLiveTracking" class="btn btn-danger">
+            Stop Live Tracking
+        </button>
     </div>
 </div>
 
@@ -211,4 +221,9 @@
 
         xhr.send(body);
     }
+   
+
+
 </script>
+<script src="~/Scripts/GpsTracking/GpsFieldVisitLocationFix.js"></script>
+<script src="~/Scripts/GpsTracking/GpsLiveTracking.js"></script>

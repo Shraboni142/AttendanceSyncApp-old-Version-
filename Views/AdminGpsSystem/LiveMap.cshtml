@@ -1,6 +1,12 @@
-﻿@{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
-
-<h3>Live Tracking Map</h3>
-<p>Live map page will come here.</p>
+﻿<div class="card">
+    <div class="card-header">
+        <h4>Live Tracking Map</h4>
+        <span id="liveTrackerCount">Active Trackers: 0</span>
+    </div>
+    <div class="card-body">
+        <div id="liveMap" style="height: 500px; width: 100%;"></div>
+    </div>
+</div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="~/Scripts/Admin/GpsLiveMap.js"></script>
