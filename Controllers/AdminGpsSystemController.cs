@@ -33,6 +33,12 @@ namespace AttendanceSyncApp.Controllers
             ViewBag.ActiveMenu = "GpsLiveMap";
             return View("~/Views/AdminGpsSystem/LiveMap.cshtml");
         }
+        public ActionResult LiveTrackingStart()
+        {
+            ViewBag.Title = "Employee Live Tracking";
+            ViewBag.AfterStartRedirectUrl = Url.Action("LiveMap", "AdminGpsSystem");
+            return View("~/Views/GpsTracking/LiveTracking.cshtml");
+        }
         public ActionResult FieldVisitEntry()
         {
             ViewBag.Title = "Field Visit GPS Entry";

@@ -70,6 +70,12 @@
             <label>Longitude</label>
             <input type="text" id="txtLongitude" class="form-control" readonly />
         </div>
+        <div class="row mt-3" id="mapContainer" style="display:none;">
+            <div class="col-md-12">
+                <label>Select Location from Map</label>
+                <div id="map" style="height: 300px; width: 100%;"></div>
+            </div>
+        </div>
         <div class="col-md-4">
             <label>Accuracy (Meter)</label>
             <input type="text" id="txtAccuracy" class="form-control" readonly />
@@ -208,3 +214,5 @@
     }
 </script>
 <script src="~/Scripts/GpsTracking/GpsFieldVisitLocationFix.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

@@ -21,6 +21,11 @@ namespace AttendanceSyncApp.Controllers
             return View();
         }
         [HttpGet]
+        public ActionResult LiveTracking()
+        {
+            ViewBag.Title = "Employee Live Tracking";
+            return View("~/Views/GpsTracking/LiveTracking.cshtml");
+        }
         public JsonResult GetCurrentLiveLocations()
         {
             try

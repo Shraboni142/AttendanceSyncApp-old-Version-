@@ -1,0 +1,34 @@
+﻿@model AttendanceSyncApp.Models.DTOs.Payroll.BonusTypeDto
+
+@{
+    ViewBag.Title = "Create Bonus Type";
+    ViewBag.ActiveMenu = "BonusType";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h3>Create Bonus Type</h3>
+
+<div class="mb-3">
+    <a href="@Url.Action("Index", "AdminBonusType")" class="btn btn-warning">Back to List</a>
+</div>
+
+@using (Html.BeginForm("Create", "AdminBonusType", FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-group mb-3">
+        <label>Name <span class="text-danger">*</span></label>
+        @Html.TextBoxFor(m => m.BonusTypeName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.BonusTypeName, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group mb-3">
+        <label>Remarks <span class="text-danger">*</span></label>
+        @Html.TextAreaFor(m => m.remark, new { @class = "form-control", rows = 4 })
+        @Html.ValidationMessageFor(m => m.remark, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="reset" class="btn btn-primary">Clear</button>
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="@Url.Action("Index", "AdminBonusType")" class="btn btn-danger">Cancel</a>
+}

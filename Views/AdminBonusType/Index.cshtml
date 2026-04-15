@@ -1,0 +1,334 @@
+﻿@model List<AttendanceSyncApp.Models.DTOs.Payroll.BonusTypeDto>
+
+@{
+    ViewBag.Title = "Bonus Type List";
+    ViewBag.ActiveMenu = "BonusType";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+
+<style>
+    .bonus-type-page {
+        background: #f3f3f3;
+        padding: 14px 18px 30px 18px;
+        min-height: 100vh;
+    }
+
+    .bonus-type-box {
+        background: #f3f3f3;
+        border: 1px solid #d9d9d9;
+        padding: 0;
+    }
+
+    .bonus-top-header {
+        padding: 14px 8px 16px 8px;
+        border-bottom: 1px solid #d3d3d3;
+        margin: 0 10px 14px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .bonus-top-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+        .bonus-top-left i {
+            font-size: 38px;
+            color: #607d9b;
+        }
+
+    .bonus-title-text {
+        font-size: 29px;
+        font-weight: 500;
+        color: #607d9b;
+        margin: 0;
+    }
+
+    .btn-create-new {
+        background: #5bc0de;
+        color: #fff !important;
+        border: none;
+        border-radius: 4px;
+        padding: 13px 24px;
+        font-size: 18px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-create-new:hover {
+            background: #46b8da;
+            text-decoration: none;
+        }
+
+    .bonus-table-area {
+        padding: 6px 10px 20px 10px;
+    }
+
+    table.dataTable {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 0 !important;
+    }
+
+        table.dataTable thead th,
+        table.dataTable thead td {
+            background: #3f556b !important;
+            color: #ffffff !important;
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            padding: 16px 18px !important;
+            border-bottom: none !important;
+            border-right: none !important;
+        }
+
+        table.dataTable tbody td {
+            background: #f8f8f8;
+            color: #5d7896;
+            font-size: 18px;
+            padding: 16px 18px !important;
+            border-top: 1px solid #d9d9d9 !important;
+            border-bottom: 1px solid #d9d9d9 !important;
+        }
+
+        table.dataTable.no-footer {
+            border-bottom: 1px solid #d9d9d9 !important;
+        }
+
+    .dataTables_wrapper .dataTables_length {
+        float: left;
+        margin-bottom: 10px;
+        margin-left: 2px;
+    }
+
+    .dataTables_wrapper .dataTables_filter {
+        float: right;
+        text-align: right;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+
+        .dataTables_wrapper .dataTables_length label,
+        .dataTables_wrapper .dataTables_filter label {
+            color: #607d9b;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+    .dataTables_wrapper .dataTables_length select {
+        min-width: 120px;
+        height: 48px;
+        margin: 0 8px;
+        border: 1px solid #9b9b9b;
+        border-radius: 2px;
+        padding: 6px 8px;
+        font-size: 18px;
+        background: #fff;
+        color: #607d9b;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 270px !important;
+        height: 42px;
+        margin-left: 10px;
+        border: 2px solid #333 !important;
+        border-radius: 0;
+        font-size: 18px;
+        background: #fff;
+    }
+
+    .dataTables_wrapper .dataTables_info {
+        display: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate {
+        float: left !important;
+        text-align: left !important;
+        margin-top: 18px;
+    }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            min-width: 50px !important;
+            height: 50px;
+            padding: 8px 12px !important;
+            margin: 0 4px 0 0 !important;
+            border-radius: 6px !important;
+            background: #4a97d3 !important;
+            border: 1px solid #4a97d3 !important;
+            color: #fff !important;
+            line-height: 30px !important;
+        }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+                background: #4a97d3 !important;
+                border: 1px solid #4a97d3 !important;
+                color: #fff !important;
+            }
+
+            .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+                background: #3c89c3 !important;
+                border: 1px solid #3c89c3 !important;
+                color: #fff !important;
+            }
+
+    .dataTables_filter label {
+        font-size: 0;
+    }
+
+        .dataTables_filter label:before {
+            content: "Search all columns:";
+            font-size: 18px;
+            font-weight: 700;
+            color: #607d9b;
+            margin-right: 0;
+        }
+
+    .action-cell {
+        white-space: nowrap;
+    }
+
+        .action-cell a,
+        .action-cell button {
+            background: transparent;
+            border: none;
+            color: #5d7896;
+            font-size: 24px;
+            padding: 0;
+            margin: 0 4px;
+            vertical-align: middle;
+            text-decoration: none;
+        }
+
+        .action-cell .divider {
+            color: #8a8a8a;
+            font-size: 24px;
+            vertical-align: middle;
+            margin: 0 2px;
+        }
+
+        .action-cell form {
+            display: inline-block;
+        }
+
+        .action-cell a:hover,
+        .action-cell button:hover {
+            color: #3e5873;
+        }
+
+    .bonus-alert {
+        margin: 0 10px 10px 10px;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        padding-top: 4px;
+    }
+
+    .clearfix-fix::after {
+        content: "";
+        display: block;
+        clear: both;
+    }
+</style>
+
+<div class="bonus-type-page">
+    <div class="bonus-type-box">
+        <div class="bonus-top-header">
+            <div class="bonus-top-left">
+                <i class="fa fa-table"></i>
+                <h2 class="bonus-title-text">Bonus Type List</h2>
+            </div>
+
+            <a href="@Url.Action("Create", "AdminBonusType")" class="btn-create-new">Create New</a>
+        </div>
+
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success bonus-alert">@TempData["SuccessMessage"]</div>
+        }
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger bonus-alert">@TempData["ErrorMessage"]</div>
+        }
+
+        <div class="bonus-table-area">
+            <table id="bonusTypeTable" class="display">
+                <thead>
+                    <tr>
+                        <th style="width:70px;">#</th>
+                        <th>Name</th>
+                        <th>Remarks</th>
+                        <th style="width:180px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int sl = 1;
+                    }
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@sl</td>
+                            <td>@item.BonusTypeName</td>
+                            <td>@item.remark</td>
+                            <td class="action-cell">
+                                <a href="@Url.Action("Edit", "AdminBonusType", new { id = item.Id })" title="Edit">
+                                    <i class="fa fa-pencil-square-o"></i>
+                                </a>
+
+                                <span class="divider">|</span>
+
+                                <a href="@Url.Action("Details", "AdminBonusType", new { id = item.Id })" title="View">
+                                    <i class="fa fa-file-text-o"></i>
+                                </a>
+
+                                <span class="divider">|</span>
+
+                                @using (Html.BeginForm("Delete", "AdminBonusType", FormMethod.Post, new { onsubmit = "return confirm('Are you sure to delete this item?');" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" title="Delete">
+                                        <i class="fa fa-trash-o"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                        sl++;
+                    }
+                </tbody>
+            </table>
+
+            <div class="clearfix-fix"></div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#bonusTypeTable').DataTable({
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "ALL"]],
+                ordering: true,
+                searching: true,
+                paging: true,
+                info: false,
+                autoWidth: false,
+                dom: '<"top"lf>rt<"bottom"p><"clear">',
+                language: {
+                    lengthMenu: "Show _MENU_ entries",
+                    search: ""
+                }
+            });
+        });
+    </script>
+}

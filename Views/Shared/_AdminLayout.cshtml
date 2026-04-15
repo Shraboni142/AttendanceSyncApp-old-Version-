@@ -9,6 +9,7 @@
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
     <link href="~/Content/sweetalert2.min.css" rel="stylesheet" />
     <link href="~/Content/Admin.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 </head>
 <body>
     <div class="admin-wrapper">
@@ -54,9 +55,12 @@
                             <a href="@Url.Action("VisitHistory", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Field Visit History</a>
                         </li>
                         <li class="@(ViewBag.ActiveMenu == "GpsLiveMap" ? "active" : "")">
-                            <a href="@Url.Action("LiveMap", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Live Tracking Map</a>
+                            <a href="@Url.Action("LiveTrackingStart", "AdminGpsSystem")" style="color: #adb5bd; font-size: 0.9em;">Live Tracking Map</a>
                         </li>
                     </ul>
+                </li>
+                <li class="@(ViewBag.ActiveMenu == "BonusType" ? "active" : "")">
+                    <a href="@Url.Action("Index", "AdminBonusType")">Bonus Type</a>
                 </li>
 
                 <li class="@(ViewBag.ActiveMenu == "LoginSessions" ? "active" : "")">
@@ -154,5 +158,6 @@
     <script src="~/Scripts/Common.js"></script>
     <script src="~/Scripts/Admin/Admin.js"></script>
     @RenderSection("Scripts", required: false)
+    
 </body>
 </html>

@@ -161,6 +161,7 @@
     <Content Include="Content\bootstrap-utilities.min.css" />
     <Content Include="Content\bootstrap-utilities.rtl.css" />
     <Content Include="Content\bootstrap-utilities.rtl.min.css" />
+    <Content Include="Scripts\GpsTracking\GpsLiveTrackingWatch.js" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
@@ -205,6 +206,7 @@
     <Content Include="Scripts\BranchReprocess\BranchReprocess.js" />
     <Content Include="Scripts\Common.js" />
     <Content Include="Scripts\ConcurrentSimulation\ConcurrentSimulation.js" />
+    <Content Include="Scripts\GpsTracking\GpsEmployeeLiveTracking.js" />
     <Content Include="Scripts\GpsTracking\GpsFieldVisitLocationFix.js" />
     <Content Include="Scripts\GpsTracking\GpsLiveTracking.js" />
     <Content Include="Scripts\GpsTracking\GpsTracking.js" />
@@ -237,6 +239,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Controllers\AdminBonusTypeController.cs" />
     <Compile Include="Controllers\AdminCompaniesController.cs" />
     <Compile Include="Controllers\AdminCompanyRequestsController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
@@ -351,6 +354,7 @@
     <Compile Include="Models\DTOs\GpsSystem\GpsTrackingSessionStartDto.cs" />
     <Compile Include="Models\DTOs\GpsSystem\GpsVisitHistoryDto.cs" />
     <Compile Include="Models\DTOs\PagedResultDto.cs" />
+    <Compile Include="Models\DTOs\Payroll\BonusTypeDto.cs" />
     <Compile Include="Models\DTOs\Reports\BranchDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeDropdownDto.cs" />
     <Compile Include="Models\DTOs\Reports\EmployeeJobCardAllReportRowDto.cs" />
@@ -374,6 +378,8 @@
     <Compile Include="Models\DTOs\Sync\UserCompanyDatabaseDto.cs" />
     <Compile Include="Models\DynamicDbContext.cs" />
     <Compile Include="Models\Emp.cs" />
+    <Compile Include="Models\Payroll\BonusType.cs" />
+    <Compile Include="Models\Payroll\PayrollDbContext.cs" />
     <Compile Include="Models\SalaryGarbageRecord.cs" />
     <Compile Include="Models\SalaryGarbge\DatabaseAccess.cs" />
     <Compile Include="Models\SalaryGarbge\ServerIp.cs" />
@@ -490,12 +496,14 @@
     <Compile Include="Services\Interfaces\IAdminEmployeeStatusReportService.cs" />
     <Compile Include="Services\Interfaces\ICompanyService.cs" />
     <Compile Include="Services\Interfaces\IGpsSystemService.cs" />
+    <Compile Include="Services\Interfaces\Payroll\IBonusTypeService.cs" />
     <Compile Include="Services\Interfaces\SalaryGarbge\IDatabaseAccessService.cs" />
     <Compile Include="Services\Interfaces\SalaryGarbge\ISalaryGarbgeScanService.cs" />
     <Compile Include="Services\Interfaces\SalaryGarbge\IServerIpManagementService.cs" />
     <Compile Include="Services\Interfaces\Sync\IDynamicDatabaseService.cs" />
     <Compile Include="Services\Interfaces\Sync\ISyncRequestService.cs" />
     <Compile Include="Services\Interfaces\Sync\ICompanyRequestService.cs" />
+    <Compile Include="Services\Payroll\BonusTypeService.cs" />
     <Compile Include="Services\SalaryGarbge\DatabaseAccessService.cs" />
     <Compile Include="Services\SalaryGarbge\SalaryGarbgeScanService.cs" />
     <Compile Include="Services\SalaryGarbge\ServerIpManagementService.cs" />
@@ -577,6 +585,11 @@
     <Content Include="Views\AdminGpsSystem\LiveMap.cshtml" />
     <Content Include="Views\GpsTracking\Index.cshtml" />
     <Content Include="Views\AdminGpsSystem\FieldVisitEntry.cshtml" />
+    <Content Include="Views\GpsTracking\LiveTracking.cshtml" />
+    <Content Include="Views\AdminBonusType\Index.cshtml" />
+    <Content Include="Views\AdminBonusType\Create.cshtml" />
+    <Content Include="Views\AdminBonusType\Edit.cshtml" />
+    <Content Include="Views\AdminBonusType\Details.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

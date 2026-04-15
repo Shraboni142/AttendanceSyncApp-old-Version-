@@ -1,0 +1,137 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container" style="margin-top:30px;">
+    <h3>Employee Live Tracking</h3>
+    <hr />
+
+    <div class="row">
+        <div class="col-md-6">
+            <label>Mobile No <span style="color:red;">*</span></label>
+            <input type="text" id="txtMobileNo" class="form-control" />
+        </div>
+        <div class="col-md-6" style="padding-top:25px;">
+            <button type="button" id="btnLoadTracker" class="btn btn-info">Load Tracker User</button>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-4">
+            <label>Employee Code</label>
+            <input type="text" id="txtEmployeeCode" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Employee Name</label>
+            <input type="text" id="txtEmployeeName" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Branch Name</label>
+            <input type="text" id="txtBranchName" class="form-control" readonly />
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:15px;">
+        <div class="col-md-4">
+            <label>Latitude</label>
+            <input type="text" id="txtLatitude" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Longitude</label>
+            <input type="text" id="txtLongitude" class="form-control" readonly />
+        </div>
+        <div class="col-md-4">
+            <label>Accuracy (Meter)</label>
+            <input type="text" id="txtAccuracy" class="form-control" readonly />
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:20px;">
+        <div class="col-md-12">
+            <button type="button" id="btnGetLocation" class="btn btn-warning">Get Current Location</button>
+            <button type="button" id="btnStartLiveTracking" class="btn btn-primary">Start Live Tracking</button>
+            <button type="button" id="btnStopLiveTracking" class="btn btn-danger">Stop Live Tracking</button>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top:20px;">
+        <div class="col-md-12">
+            <div id="trackingStatus" class="alert alert-secondary">
+                Tracking not started.
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="hdnTrackerUserId" />
+    <input type="hidden" id="hdnMapRedirectUrl" value="@((ViewBag.AfterStartRedirectUrl ?? "/AdminGpsSystem/LiveMap").ToString())" />
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("btnLoadTracker").addEventListener("click", loadTrackerUser);
+        document.getElementById("btnGetLocation").addEventListener("click", getCurrentLocationPreview);
+    });
+
+    function loadTrackerUser() {
+        var mobileNo = document.getElementById("txtMobileNo").value;
+
+        if (!mobileNo) {
+            alert("Please enter mobile number.");
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/GpsTracking/GetTrackerUserByMobileNo?mobileNo=" + encodeURIComponent(mobileNo), true);
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+
+                    if (!data) {
+                        alert("No active tracker user found for this mobile number.");
+                        return;
+                    }
+
+                    document.getElementById("hdnTrackerUserId").value = data.Id || "";
+                    document.getElementById("txtEmployeeCode").value = data.EmployeeCode || "";
+                    document.getElementById("txtEmployeeName").value = data.EmployeeName || "";
+                    document.getElementById("txtBranchName").value = data.BranchName || "";
+
+                    document.getElementById("trackingStatus").innerText = "Tracker user loaded successfully.";
+                    alert("Tracker user loaded successfully.");
+                } else {
+                    alert("Failed to load tracker user.");
+                }
+            }
+        };
+
+        xhr.send();
+    }
+
+    function getCurrentLocationPreview() {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by this browser.");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function (position) {
+                document.getElementById("txtLatitude").value = position.coords.latitude;
+                document.getElementById("txtLongitude").value = position.coords.longitude;
+                document.getElementById("txtAccuracy").value = position.coords.accuracy || "";
+                document.getElementById("trackingStatus").innerText = "Current location captured successfully.";
+            },
+            function () {
+                alert("Failed to get location. Please allow GPS permission.");
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    }
+</script>
+
+<script src="~/Scripts/GpsTracking/GpsLiveTrackingWatch.js"></script>
