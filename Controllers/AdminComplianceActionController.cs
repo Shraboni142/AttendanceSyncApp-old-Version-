@@ -29,6 +29,18 @@ namespace AttendanceSyncApp.Controllers
         {
             ViewBag.Title = "Compliance List";
             ViewBag.ActiveMenu = "ComplianceAction";
+            ViewBag.IsReviewMode = false;
+
+            var data = _service.GetAllComplianceActions();
+
+            return View("~/Views/AdminComplianceAction/Index.cshtml", data);
+        }
+
+        public ActionResult ReviewList()
+        {
+            ViewBag.Title = "Employee Compliance Review";
+            ViewBag.ActiveMenu = "EmployeeComplianceReview";
+            ViewBag.IsReviewMode = true;
 
             var data = _service.GetAllComplianceActions();
 
@@ -50,6 +62,21 @@ namespace AttendanceSyncApp.Controllers
             return View("~/Views/AdminComplianceAction/Create.cshtml", data);
         }
 
+        public ActionResult ViewCompliance(int id)
+        {
+            ViewBag.Title = "View Compliance Action Information";
+            ViewBag.ActiveMenu = "EmployeeComplianceReview";
+
+            var data = _service.GetComplianceActionById(id);
+
+            if (data == null)
+            {
+                return RedirectToAction("ReviewList");
+            }
+
+            return View("~/Views/AdminComplianceAction/Create.cshtml", data);
+        }
+
         [HttpPost]
         public JsonResult SaveComplianceAction(ComplianceActionCreateDto dto)
         {
@@ -63,6 +90,11 @@ namespace AttendanceSyncApp.Controllers
 
                 if (dto.DateOfNotice == DateTime.MinValue)
                     return Json(new { success = false, message = "Date of Notice is required." });
+
+                if (string.IsNullOrWhiteSpace(dto.ReviewStatus))
+                {
+                    dto.ReviewStatus = "InProgress";
+                }
 
                 if (dto.AttachmentFile != null && dto.AttachmentFile.ContentLength > 0)
                 {
@@ -90,6 +122,11 @@ namespace AttendanceSyncApp.Controllers
                         {
                             dto.AttachmentFileName = oldData.AttachmentFileName;
                             dto.AttachmentFilePath = oldData.AttachmentFilePath;
+
+                            if (string.IsNullOrWhiteSpace(dto.ReviewStatus))
+                            {
+                                dto.ReviewStatus = oldData.ReviewStatus;
+                            }
                         }
                     }
                 }
@@ -123,6 +160,7 @@ namespace AttendanceSyncApp.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
         public ActionResult ViewAttachment(int id)
         {
             var data = _service.GetComplianceActionById(id);
@@ -134,6 +172,11 @@ namespace AttendanceSyncApp.Controllers
 
             string fullPath = data.AttachmentFilePath;
 
+            if (fullPath.StartsWith("/"))
+            {
+                fullPath = Server.MapPath(fullPath);
+            }
+
             if (!System.IO.File.Exists(fullPath))
             {
                 return HttpNotFound();
@@ -144,6 +187,26 @@ namespace AttendanceSyncApp.Controllers
                 : data.AttachmentFileName;
 
             return File(fullPath, MimeMapping.GetMimeMapping(fileName), fileName);
+        }
+
+        [HttpPost]
+        public JsonResult UpdateReviewStatus(int id, string reviewStatus)
+        {
+            try
+            {
+                bool result = _service.UpdateComplianceReviewStatus(id, reviewStatus);
+
+                if (result)
+                {
+                    return Json(new { success = true, message = "Status updated successfully." });
+                }
+
+                return Json(new { success = false, message = "Status update failed." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost]

@@ -10,5 +10,6 @@ namespace AttendanceSyncApp.Services.Interfaces
         ComplianceActionCreateDto GetComplianceActionById(int id);
         bool UpdateComplianceAction(ComplianceActionCreateDto dto);
         bool DeleteComplianceAction(int id);
+        bool UpdateComplianceReviewStatus(int id, string reviewStatus);
     }
 }

@@ -600,6 +600,7 @@
     <Content Include="Views\AdminBonusType\Details.cshtml" />
     <Content Include="Views\AdminComplianceAction\Create.cshtml" />
     <Content Include="Views\AdminComplianceAction\Index.cshtml" />
+    <Content Include="Views\AdminComplianceAction\View.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

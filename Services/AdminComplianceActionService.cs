@@ -34,6 +34,7 @@ INSERT INTO dbo.EmployeeComplianceActions
     EarlyWithdrawalDate,
     AttachmentFileName,
     AttachmentFilePath,
+    ReviewStatus,
     IsActive,
     CreatedBy,
     CreatedAt
@@ -50,6 +51,7 @@ VALUES
     @EarlyWithdrawalDate,
     @AttachmentFileName,
     @AttachmentFilePath,
+    @ReviewStatus,
     1,
     @CreatedBy,
     GETDATE()
@@ -59,19 +61,15 @@ VALUES
                 {
                     cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
-
                     cmd.Parameters.AddWithValue("@OffenceType", dto.OffenceType ?? "");
                     cmd.Parameters.AddWithValue("@OffenceDetails", (object)dto.OffenceDetails ?? DBNull.Value);
-
                     cmd.Parameters.AddWithValue("@ComplianceActionType", dto.ComplianceActionType ?? "");
                     cmd.Parameters.AddWithValue("@ComplianceActionDetails", (object)dto.ComplianceActionDetails ?? DBNull.Value);
-
                     cmd.Parameters.AddWithValue("@DateOfNotice", dto.DateOfNotice);
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
-
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFilePath", (object)dto.AttachmentFilePath ?? DBNull.Value);
-
+                    cmd.Parameters.AddWithValue("@ReviewStatus", (object)dto.ReviewStatus ?? "InProgress");
                     cmd.Parameters.AddWithValue("@CreatedBy", (object)dto.CreatedBy ?? DBNull.Value);
 
                     conn.Open();
@@ -95,7 +93,8 @@ SELECT
     OffenceType,
     OffenceDetails,
     ComplianceActionType,
-    ComplianceActionDetails
+    ComplianceActionDetails,
+    ReviewStatus
 FROM dbo.EmployeeComplianceActions
 ORDER BY Id DESC";
 
@@ -114,7 +113,8 @@ ORDER BY Id DESC";
                                 OffenceType = reader["OffenceType"] == DBNull.Value ? "" : reader["OffenceType"].ToString(),
                                 OffenceDetails = reader["OffenceDetails"] == DBNull.Value ? "" : reader["OffenceDetails"].ToString(),
                                 ComplianceActionType = reader["ComplianceActionType"] == DBNull.Value ? "" : reader["ComplianceActionType"].ToString(),
-                                ComplianceActionDetails = reader["ComplianceActionDetails"] == DBNull.Value ? "" : reader["ComplianceActionDetails"].ToString()
+                                ComplianceActionDetails = reader["ComplianceActionDetails"] == DBNull.Value ? "" : reader["ComplianceActionDetails"].ToString(),
+                                ReviewStatus = reader["ReviewStatus"] == DBNull.Value ? "" : reader["ReviewStatus"].ToString()
                             });
                         }
                     }
@@ -142,7 +142,8 @@ SELECT
     DateOfNotice,
     EarlyWithdrawalDate,
     AttachmentFileName,
-    AttachmentFilePath
+    AttachmentFilePath,
+    ReviewStatus
 FROM dbo.EmployeeComplianceActions
 WHERE Id = @Id";
 
@@ -167,7 +168,8 @@ WHERE Id = @Id";
                                 DateOfNotice = reader["DateOfNotice"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["DateOfNotice"]),
                                 EarlyWithdrawalDate = reader["EarlyWithdrawalDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["EarlyWithdrawalDate"]),
                                 AttachmentFileName = reader["AttachmentFileName"] == DBNull.Value ? "" : reader["AttachmentFileName"].ToString(),
-                                AttachmentFilePath = reader["AttachmentFilePath"] == DBNull.Value ? "" : reader["AttachmentFilePath"].ToString()
+                                AttachmentFilePath = reader["AttachmentFilePath"] == DBNull.Value ? "" : reader["AttachmentFilePath"].ToString(),
+                                ReviewStatus = reader["ReviewStatus"] == DBNull.Value ? "" : reader["ReviewStatus"].ToString()
                             };
                         }
                     }
@@ -194,6 +196,7 @@ SET
     EarlyWithdrawalDate = @EarlyWithdrawalDate,
     AttachmentFileName = @AttachmentFileName,
     AttachmentFilePath = @AttachmentFilePath,
+    ReviewStatus = @ReviewStatus,
     UpdatedBy = @UpdatedBy,
     UpdatedAt = GETDATE()
 WHERE Id = @Id";
@@ -211,6 +214,7 @@ WHERE Id = @Id";
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFilePath", (object)dto.AttachmentFilePath ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ReviewStatus", (object)dto.ReviewStatus ?? "InProgress");
                     cmd.Parameters.AddWithValue("@UpdatedBy", (object)dto.CreatedBy ?? DBNull.Value);
 
                     conn.Open();
@@ -229,6 +233,29 @@ WHERE Id = @Id";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@Id", id);
+
+                    conn.Open();
+                    int rowAffected = cmd.ExecuteNonQuery();
+                    return rowAffected > 0;
+                }
+            }
+        }
+
+        public bool UpdateComplianceReviewStatus(int id, string reviewStatus)
+        {
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            {
+                string query = @"
+UPDATE dbo.EmployeeComplianceActions
+SET
+    ReviewStatus = @ReviewStatus,
+    UpdatedAt = GETDATE()
+WHERE Id = @Id";
+
+                using (SqlCommand cmd = new SqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Id", id);
+                    cmd.Parameters.AddWithValue("@ReviewStatus", (object)reviewStatus ?? DBNull.Value);
 
                     conn.Open();
                     int rowAffected = cmd.ExecuteNonQuery();

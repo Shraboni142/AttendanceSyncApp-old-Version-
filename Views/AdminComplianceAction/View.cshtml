@@ -1,0 +1,103 @@
+﻿@model AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionCreateDto
+
+@{
+    ViewBag.Title = "View Compliance Action Information";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3>View Compliance Action Information</h3>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a href="@Url.Action("ReviewList", "AdminComplianceAction")" class="btn btn-warning">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="form-horizontal">
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Employee Name</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@Model.EmployeeName" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Employee Code</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@Model.EmployeeCode" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Offence Type</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@Model.OffenceType" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Offence Details</label>
+                            <div class="col-md-6">
+                                <textarea class="form-control" rows="4" readonly>@Model.OffenceDetails</textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Compliance Action Type</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@Model.ComplianceActionType" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Compliance Action Details</label>
+                            <div class="col-md-6">
+                                <textarea class="form-control" rows="4" readonly>@Model.ComplianceActionDetails</textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Date of Notice</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@Model.DateOfNotice.ToString("dd/MM/yyyy")" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Early Withdrawal Date</label>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" value="@(Model.EarlyWithdrawalDate.HasValue ? Model.EarlyWithdrawalDate.Value.ToString("dd/MM/yyyy") : "")" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label">Attachment</label>
+                            <div class="col-md-6">
+                                @if (!string.IsNullOrWhiteSpace(Model.AttachmentFilePath))
+                                {
+                                    <a href="@Url.Content(Model.AttachmentFilePath)" target="_blank" class="btn btn-info btn-sm">
+                                        View Attachment
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span>No attachment found.</span>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

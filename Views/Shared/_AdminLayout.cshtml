@@ -37,6 +37,11 @@
                         <i class="fa fa-gavel"></i> Compliance Action
                     </a>
                 </li>
+                <li class="@(ViewBag.ActiveMenu == "EmployeeComplianceReview" ? "active" : "")">
+                    <a href="@Url.Action("ReviewList", "AdminComplianceAction")">
+                        <i class="fa fa-list"></i> Employee Compliance Review
+                    </a>
+                </li>
                 </li>
                 <li class="@(ViewBag.ActiveMenu == "Users" ? "active" : "")">
                     <a href="@Url.Action("Index", "AdminUsers")">Users</a>

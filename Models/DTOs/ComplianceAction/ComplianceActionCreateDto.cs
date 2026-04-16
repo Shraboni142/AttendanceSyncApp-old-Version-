@@ -8,6 +8,7 @@ namespace AttendanceSyncApp.Models.DTOs.ComplianceAction
         public int Id { get; set; }
         public string EmployeeCode { get; set; }
         public string EmployeeName { get; set; }
+        public string ReviewStatus { get; set; }
 
         public string OffenceType { get; set; }
         public string OffenceDetails { get; set; }

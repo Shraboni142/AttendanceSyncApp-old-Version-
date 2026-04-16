@@ -1,6 +1,6 @@
 ﻿$(document).ready(function () {
 
-    $(".btnDeleteComplianceAction").click(function () {
+    $(document).on("click", ".btnDeleteComplianceAction", function () {
         var id = $(this).data("id");
 
         if (confirm("Are you sure you want to delete this record?")) {
@@ -23,4 +23,9 @@
         }
     });
 
-});
+    $(document).on("change", ".reviewStatusDropdown", function () {
+        var id = $(this).data("id");
+        var reviewStatus = $(this).val();
+
+        $.ajax({
+            url: '/Admin
