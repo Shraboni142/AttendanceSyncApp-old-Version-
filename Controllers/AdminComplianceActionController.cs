@@ -3,6 +3,7 @@ using AttendanceSyncApp.Services;
 using AttendanceSyncApp.Services.Interfaces;
 using System;
 using System.IO;
+using System.Web;
 using System.Web.Mvc;
 
 namespace AttendanceSyncApp.Controllers
@@ -23,15 +24,17 @@ namespace AttendanceSyncApp.Controllers
 
             return View("~/Views/AdminComplianceAction/Create.cshtml", new ComplianceActionCreateDto());
         }
+
         public ActionResult Index()
         {
-            ViewBag.Title = "Compliance Action List";
+            ViewBag.Title = "Compliance List";
             ViewBag.ActiveMenu = "ComplianceAction";
 
             var data = _service.GetAllComplianceActions();
 
             return View("~/Views/AdminComplianceAction/Index.cshtml", data);
         }
+
         public ActionResult Edit(int id)
         {
             ViewBag.Title = "Edit Compliance Action Information";
@@ -46,6 +49,7 @@ namespace AttendanceSyncApp.Controllers
 
             return View("~/Views/AdminComplianceAction/Create.cshtml", data);
         }
+
         [HttpPost]
         public JsonResult SaveComplianceAction(ComplianceActionCreateDto dto)
         {
@@ -113,6 +117,48 @@ namespace AttendanceSyncApp.Controllers
                 }
 
                 return Json(new { success = false, message = "Save failed." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        public ActionResult ViewAttachment(int id)
+        {
+            var data = _service.GetComplianceActionById(id);
+
+            if (data == null || string.IsNullOrWhiteSpace(data.AttachmentFilePath))
+            {
+                return HttpNotFound();
+            }
+
+            string fullPath = data.AttachmentFilePath;
+
+            if (!System.IO.File.Exists(fullPath))
+            {
+                return HttpNotFound();
+            }
+
+            string fileName = string.IsNullOrWhiteSpace(data.AttachmentFileName)
+                ? Path.GetFileName(fullPath)
+                : data.AttachmentFileName;
+
+            return File(fullPath, MimeMapping.GetMimeMapping(fileName), fileName);
+        }
+
+        [HttpPost]
+        public JsonResult DeleteComplianceAction(int id)
+        {
+            try
+            {
+                bool result = _service.DeleteComplianceAction(id);
+
+                if (result)
+                {
+                    return Json(new { success = true, message = "Compliance record deleted successfully." });
+                }
+
+                return Json(new { success = false, message = "Delete failed." });
             }
             catch (Exception ex)
             {

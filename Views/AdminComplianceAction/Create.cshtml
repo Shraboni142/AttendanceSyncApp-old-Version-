@@ -12,7 +12,7 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-md-8">
-                            <h3>Add Compliance Action Information</h3>
+                            <h3>@(Model != null && Model.Id > 0 ? "Edit Compliance Action Information" : "Add Compliance Action Information")</h3>
                             <small>All Red marked are required</small>
                         </div>
                         <div class="col-md-4 text-right">
@@ -32,13 +32,6 @@
                                 <label class="col-md-4 control-label">Employee Name</label>
                                 <div class="col-md-6">
                                     @Html.TextBoxFor(model => model.EmployeeName, new { @class = "form-control" })
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-md-4 control-label">Employee ID</label>
-                                <div class="col-md-6">
-                                    @Html.TextBoxFor(model => model.EmployeeId, new { @class = "form-control", type = "number" })
                                 </div>
                             </div>
 
@@ -123,20 +116,6 @@
                             </div>
 
                             <div class="form-group row">
-                                <label class="col-md-4 control-label">From Date</label>
-                                <div class="col-md-6">
-                                    @Html.TextBoxFor(model => model.FromDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "FromDate" })
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-md-4 control-label">To Date</label>
-                                <div class="col-md-6">
-                                    @Html.TextBoxFor(model => model.ToDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "ToDate" })
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
                                 <label class="col-md-4 control-label">Early Withdrawal Date</label>
                                 <div class="col-md-6">
                                     @Html.TextBoxFor(model => model.EarlyWithdrawalDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "EarlyWithdrawalDate" })
@@ -146,10 +125,24 @@
                             <div class="form-group row">
                                 <label class="col-md-4 control-label">Attach File</label>
                                 <div class="col-md-6">
+                                    @if (Model != null && Model.Id > 0 && !string.IsNullOrWhiteSpace(Model.AttachmentFilePath))
+                                    {
+                                        <div style="margin-bottom:8px;">
+                                            <strong>Current File:</strong>
+                                            <a href="@Url.Content(Model.AttachmentFilePath)" target="_blank">
+                                                @(string.IsNullOrWhiteSpace(Model.AttachmentFileName) ? "View Attachment" : Model.AttachmentFileName)
+                                            </a>
+                                        </div>
+                                    }
+
                                     <input type="file" name="AttachmentFile" id="AttachmentFile" class="form-control" />
+
+                                    @if (Model != null && Model.Id > 0 && !string.IsNullOrWhiteSpace(Model.AttachmentFilePath))
+                                    {
+                                        <small class="text-muted">Previous file is kept. Choose a new file only if you want to replace it.</small>
+                                    }
                                 </div>
                             </div>
-
                             <div class="form-group row" style="margin-top:20px;">
                                 <div class="col-md-offset-4 col-md-6">
                                     <button type="button" id="btnSaveComplianceAction" class="btn btn-success">Save</button>
@@ -166,5 +159,5 @@
 </div>
 
 @section Scripts{
-    <script src="~/Scripts/Admin/ComplianceAction.js"></script>
+    <script src="~/Scripts/Admin/ComplianceActionCreate.js"></script>
 }

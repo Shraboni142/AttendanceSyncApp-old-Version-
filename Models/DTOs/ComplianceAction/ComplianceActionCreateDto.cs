@@ -5,7 +5,6 @@ namespace AttendanceSyncApp.Models.DTOs.ComplianceAction
 {
     public class ComplianceActionCreateDto
     {
-        public int? EmployeeId { get; set; }
         public int Id { get; set; }
         public string EmployeeCode { get; set; }
         public string EmployeeName { get; set; }
@@ -17,8 +16,6 @@ namespace AttendanceSyncApp.Models.DTOs.ComplianceAction
         public string ComplianceActionDetails { get; set; }
 
         public DateTime DateOfNotice { get; set; }
-        public DateTime? FromDate { get; set; }
-        public DateTime? ToDate { get; set; }
         public DateTime? EarlyWithdrawalDate { get; set; }
 
         public string AttachmentFileName { get; set; }

@@ -6,10 +6,9 @@ namespace AttendanceSyncApp.Services.Interfaces
     public interface IAdminComplianceActionService
     {
         bool SaveComplianceAction(ComplianceActionCreateDto dto);
+        List<ComplianceActionListDto> GetAllComplianceActions();
+        ComplianceActionCreateDto GetComplianceActionById(int id);
         bool UpdateComplianceAction(ComplianceActionCreateDto dto);
         bool DeleteComplianceAction(int id);
-
-        ComplianceActionCreateDto GetComplianceActionById(int id);
-        List<ComplianceActionListDto> GetAllComplianceActions();
     }
 }

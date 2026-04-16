@@ -15,7 +15,7 @@
                     } else {
                         alert(response.message);
                     }
-                }
+                },
                 error: function () {
                     alert("An error occurred while deleting.");
                 }

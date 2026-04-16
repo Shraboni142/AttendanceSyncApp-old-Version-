@@ -1,7 +1,7 @@
 ﻿@model List<AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionListDto>
 
 @{
-    ViewBag.Title = "Compliance Action List";
+    ViewBag.Title = "Compliance List";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -10,7 +10,7 @@
         <div class="card-header">
             <div class="row">
                 <div class="col-md-8">
-                    <h3>Compliance Action List</h3>
+                    <h3>Compliance List</h3>
                 </div>
                 <div class="col-md-4 text-right">
                     <a href="@Url.Action("Create", "AdminComplianceAction")" class="btn btn-success">Add New</a>
@@ -23,7 +23,7 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Employee ID</th>
+                            <th>Compliance ID</th>
                             <th>Employee Code</th>
                             <th>Employee Name</th>
                             <th>Offence Type</th>
@@ -39,7 +39,7 @@
                             foreach (var item in Model)
                             {
                                 <tr>
-                                    <td>@item.EmployeeId</td>
+                                    <td>@item.Id</td>
                                     <td>@item.EmployeeCode</td>
                                     <td>@item.EmployeeName</td>
                                     <td>@item.OffenceType</td>
@@ -67,5 +67,5 @@
 </div>
 
 @section Scripts{
-    <script src="~/Scripts/Admin/ComplianceActionIndex.js"></script>
+    <script src="~/Scripts/Admin/ComplianceAction.js"></script>
 }

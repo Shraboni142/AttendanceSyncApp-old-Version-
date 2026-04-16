@@ -24,7 +24,6 @@ namespace AttendanceSyncApp.Services
                 string query = @"
 INSERT INTO dbo.EmployeeComplianceActions
 (
-    EmployeeId,
     EmployeeCode,
     EmployeeName,
     OffenceType,
@@ -32,8 +31,6 @@ INSERT INTO dbo.EmployeeComplianceActions
     ComplianceActionType,
     ComplianceActionDetails,
     DateOfNotice,
-    FromDate,
-    ToDate,
     EarlyWithdrawalDate,
     AttachmentFileName,
     AttachmentFilePath,
@@ -43,7 +40,6 @@ INSERT INTO dbo.EmployeeComplianceActions
 )
 VALUES
 (
-    @EmployeeId,
     @EmployeeCode,
     @EmployeeName,
     @OffenceType,
@@ -51,8 +47,6 @@ VALUES
     @ComplianceActionType,
     @ComplianceActionDetails,
     @DateOfNotice,
-    @FromDate,
-    @ToDate,
     @EarlyWithdrawalDate,
     @AttachmentFileName,
     @AttachmentFilePath,
@@ -63,8 +57,6 @@ VALUES
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
-                    
-                    cmd.Parameters.AddWithValue("@EmployeeId", (object)dto.EmployeeId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
 
@@ -75,8 +67,6 @@ VALUES
                     cmd.Parameters.AddWithValue("@ComplianceActionDetails", (object)dto.ComplianceActionDetails ?? DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@DateOfNotice", dto.DateOfNotice);
-                    cmd.Parameters.AddWithValue("@FromDate", (object)dto.FromDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ToDate", (object)dto.ToDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
 
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
@@ -90,6 +80,7 @@ VALUES
                 }
             }
         }
+
         public List<ComplianceActionListDto> GetAllComplianceActions()
         {
             List<ComplianceActionListDto> list = new List<ComplianceActionListDto>();
@@ -99,7 +90,6 @@ VALUES
                 string query = @"
 SELECT 
     Id,
-    EmployeeId,
     EmployeeCode,
     EmployeeName,
     OffenceType,
@@ -119,7 +109,6 @@ ORDER BY Id DESC";
                             list.Add(new ComplianceActionListDto
                             {
                                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
-                                EmployeeId = reader["EmployeeId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["EmployeeId"]),
                                 EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
                                 EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
                                 OffenceType = reader["OffenceType"] == DBNull.Value ? "" : reader["OffenceType"].ToString(),
@@ -134,6 +123,7 @@ ORDER BY Id DESC";
 
             return list;
         }
+
         public ComplianceActionCreateDto GetComplianceActionById(int id)
         {
             ComplianceActionCreateDto dto = null;
@@ -143,7 +133,6 @@ ORDER BY Id DESC";
                 string query = @"
 SELECT 
     Id,
-    EmployeeId,
     EmployeeCode,
     EmployeeName,
     OffenceType,
@@ -151,8 +140,6 @@ SELECT
     ComplianceActionType,
     ComplianceActionDetails,
     DateOfNotice,
-    FromDate,
-    ToDate,
     EarlyWithdrawalDate,
     AttachmentFileName,
     AttachmentFilePath
@@ -171,7 +158,6 @@ WHERE Id = @Id";
                             dto = new ComplianceActionCreateDto
                             {
                                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
-                                EmployeeId = reader["EmployeeId"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["EmployeeId"]),
                                 EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
                                 EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
                                 OffenceType = reader["OffenceType"] == DBNull.Value ? "" : reader["OffenceType"].ToString(),
@@ -179,8 +165,6 @@ WHERE Id = @Id";
                                 ComplianceActionType = reader["ComplianceActionType"] == DBNull.Value ? "" : reader["ComplianceActionType"].ToString(),
                                 ComplianceActionDetails = reader["ComplianceActionDetails"] == DBNull.Value ? "" : reader["ComplianceActionDetails"].ToString(),
                                 DateOfNotice = reader["DateOfNotice"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["DateOfNotice"]),
-                                FromDate = reader["FromDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["FromDate"]),
-                                ToDate = reader["ToDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["ToDate"]),
                                 EarlyWithdrawalDate = reader["EarlyWithdrawalDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["EarlyWithdrawalDate"]),
                                 AttachmentFileName = reader["AttachmentFileName"] == DBNull.Value ? "" : reader["AttachmentFileName"].ToString(),
                                 AttachmentFilePath = reader["AttachmentFilePath"] == DBNull.Value ? "" : reader["AttachmentFilePath"].ToString()
@@ -192,6 +176,7 @@ WHERE Id = @Id";
 
             return dto;
         }
+
         public bool UpdateComplianceAction(ComplianceActionCreateDto dto)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
@@ -199,7 +184,6 @@ WHERE Id = @Id";
                 string query = @"
 UPDATE dbo.EmployeeComplianceActions
 SET
-    EmployeeId = @EmployeeId,
     EmployeeCode = @EmployeeCode,
     EmployeeName = @EmployeeName,
     OffenceType = @OffenceType,
@@ -207,8 +191,6 @@ SET
     ComplianceActionType = @ComplianceActionType,
     ComplianceActionDetails = @ComplianceActionDetails,
     DateOfNotice = @DateOfNotice,
-    FromDate = @FromDate,
-    ToDate = @ToDate,
     EarlyWithdrawalDate = @EarlyWithdrawalDate,
     AttachmentFileName = @AttachmentFileName,
     AttachmentFilePath = @AttachmentFilePath,
@@ -219,7 +201,6 @@ WHERE Id = @Id";
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@Id", dto.Id);
-                    cmd.Parameters.AddWithValue("@EmployeeId", (object)dto.EmployeeId ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmployeeCode", (object)dto.EmployeeCode ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@OffenceType", dto.OffenceType ?? "");
@@ -227,8 +208,6 @@ WHERE Id = @Id";
                     cmd.Parameters.AddWithValue("@ComplianceActionType", dto.ComplianceActionType ?? "");
                     cmd.Parameters.AddWithValue("@ComplianceActionDetails", (object)dto.ComplianceActionDetails ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DateOfNotice", dto.DateOfNotice);
-                    cmd.Parameters.AddWithValue("@FromDate", (object)dto.FromDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ToDate", (object)dto.ToDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFilePath", (object)dto.AttachmentFilePath ?? DBNull.Value);
@@ -240,6 +219,7 @@ WHERE Id = @Id";
                 }
             }
         }
+
         public bool DeleteComplianceAction(int id)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
