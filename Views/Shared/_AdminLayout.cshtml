@@ -32,6 +32,11 @@
                             <a href="@Url.Action("Index", "AdminCompanyRequests")" style="color: #adb5bd; font-size: 0.9em;">Company Request</a>
                         </li>
                     </ul>
+                <li class="@(ViewBag.ActiveMenu == "ComplianceAction" ? "active" : "")">
+                    <a href="@Url.Action("Create", "AdminComplianceAction")">
+                        <i class="fa fa-gavel"></i> Compliance Action
+                    </a>
+                </li>
                 </li>
                 <li class="@(ViewBag.ActiveMenu == "Users" ? "active" : "")">
                     <a href="@Url.Action("Index", "AdminUsers")">Users</a>

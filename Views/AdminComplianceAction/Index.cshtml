@@ -1,0 +1,71 @@
+﻿@model List<AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionListDto>
+
+@{
+    ViewBag.Title = "Compliance Action List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>Compliance Action List</h3>
+                </div>
+                <div class="col-md-4 text-right">
+                    <a href="@Url.Action("Create", "AdminComplianceAction")" class="btn btn-success">Add New</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Employee ID</th>
+                            <th>Employee Code</th>
+                            <th>Employee Name</th>
+                            <th>Offence Type</th>
+                            <th>Offence Details</th>
+                            <th>Compliance Action Type</th>
+                            <th>Compliance Action Details</th>
+                            <th style="width:150px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@item.EmployeeId</td>
+                                    <td>@item.EmployeeCode</td>
+                                    <td>@item.EmployeeName</td>
+                                    <td>@item.OffenceType</td>
+                                    <td>@item.OffenceDetails</td>
+                                    <td>@item.ComplianceActionType</td>
+                                    <td>@item.ComplianceActionDetails</td>
+                                    <td>
+                                        <a href="@Url.Action("Edit", "AdminComplianceAction", new { id = item.Id })" class="btn btn-primary btn-sm">Edit</a>
+                                        <button type="button" class="btn btn-danger btn-sm btnDeleteComplianceAction" data-id="@item.Id">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center">No data found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/Scripts/Admin/ComplianceActionIndex.js"></script>
+}

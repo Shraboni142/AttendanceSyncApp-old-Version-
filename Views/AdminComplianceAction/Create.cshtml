@@ -1,0 +1,170 @@
+﻿@model AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionCreateDto
+
+@{
+    ViewBag.Title = "Add Compliance Action Information";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card" style="margin-top:20px;">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3>Add Compliance Action Information</h3>
+                            <small>All Red marked are required</small>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a href="@Url.Action("Index", "AdminComplianceAction")" class="btn btn-warning">Back to List</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @using (Html.BeginForm("", "", FormMethod.Post, new { id = "complianceActionForm", enctype = "multipart/form-data" }))
+                    {
+                        @Html.HiddenFor(model => model.Id)
+
+                        <div class="form-horizontal">
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Employee Name</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.EmployeeName, new { @class = "form-control" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Employee ID</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.EmployeeId, new { @class = "form-control", type = "number" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Employee Code</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.EmployeeCode, new { @class = "form-control" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Offence Type <span style="color:red">*</span></label>
+                                <div class="col-md-6">
+                                    @Html.DropDownListFor(model => model.OffenceType,
+                                        new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "-- Select --", Value = "" },
+                                            new SelectListItem { Text = "Internal", Value = "Internal" },
+                                            new SelectListItem { Text = "External", Value = "External" },
+                                            new SelectListItem { Text = "Attendance Issue", Value = "Attendance Issue" },
+                                            new SelectListItem { Text = "Misconduct", Value = "Misconduct" },
+                                            new SelectListItem { Text = "Policy Violation", Value = "Policy Violation" },
+                                            new SelectListItem { Text = "Behavior Related", Value = "Behavior Related" },
+                                            new SelectListItem { Text = "Harassment", Value = "Harassment" },
+                                            new SelectListItem { Text = "Verbal Abuse", Value = "Verbal Abuse" },
+                                            new SelectListItem { Text = "Physical Misconduct", Value = "Physical Misconduct" },
+                                            new SelectListItem { Text = "Disobedience", Value = "Disobedience" },
+                                            new SelectListItem { Text = "Negligence of Duty", Value = "Negligence of Duty" },
+                                            new SelectListItem { Text = "Unauthorized Absence", Value = "Unauthorized Absence" },
+                                            new SelectListItem { Text = "Insubordination", Value = "Insubordination" },
+                                            new SelectListItem { Text = "Workplace Conflict", Value = "Workplace Conflict" },
+                                            new SelectListItem { Text = "Ethical Violation", Value = "Ethical Violation" },
+                                            new SelectListItem { Text = "Confidentiality Breach", Value = "Confidentiality Breach" },
+                                            new SelectListItem { Text = "Other", Value = "Other" }
+                                        },
+                                        new { @class = "form-control", id = "OffenceType" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Offence Details</label>
+                                <div class="col-md-6">
+                                    @Html.TextAreaFor(model => model.OffenceDetails, new { @class = "form-control", rows = "4" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Compliance Action Type <span style="color:red">*</span></label>
+                                <div class="col-md-6">
+                                    @Html.DropDownListFor(model => model.ComplianceActionType,
+                                        new List<SelectListItem>
+                                        {
+                                            new SelectListItem { Text = "-- Select --", Value = "" },
+                                            new SelectListItem { Text = "Show Cause Letter", Value = "Show Cause Letter" },
+                                            new SelectListItem { Text = "Warning Letter", Value = "Warning Letter" },
+                                            new SelectListItem { Text = "Verbal Warning", Value = "Verbal Warning" },
+                                            new SelectListItem { Text = "Written Warning", Value = "Written Warning" },
+                                            new SelectListItem { Text = "Final Notice", Value = "Final Notice" },
+                                            new SelectListItem { Text = "Suspension", Value = "Suspension" },
+                                            new SelectListItem { Text = "Termination Recommendation", Value = "Termination Recommendation" },
+                                            new SelectListItem { Text = "Explanation Call", Value = "Explanation Call" },
+                                            new SelectListItem { Text = "Investigation", Value = "Investigation" },
+                                            new SelectListItem { Text = "Counseling", Value = "Counseling" },
+                                            new SelectListItem { Text = "Other", Value = "Other" }
+                                        },
+                                        new { @class = "form-control", id = "ComplianceActionType" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Compliance Action Details</label>
+                                <div class="col-md-6">
+                                    @Html.TextAreaFor(model => model.ComplianceActionDetails, new { @class = "form-control", rows = "4" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Date of Notice <span style="color:red">*</span></label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.DateOfNotice, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "DateOfNotice" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">From Date</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.FromDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "FromDate" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">To Date</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.ToDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "ToDate" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Early Withdrawal Date</label>
+                                <div class="col-md-6">
+                                    @Html.TextBoxFor(model => model.EarlyWithdrawalDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", id = "EarlyWithdrawalDate" })
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label class="col-md-4 control-label">Attach File</label>
+                                <div class="col-md-6">
+                                    <input type="file" name="AttachmentFile" id="AttachmentFile" class="form-control" />
+                                </div>
+                            </div>
+
+                            <div class="form-group row" style="margin-top:20px;">
+                                <div class="col-md-offset-4 col-md-6">
+                                    <button type="button" id="btnSaveComplianceAction" class="btn btn-success">Save</button>
+                                    <button type="reset" class="btn btn-danger">Cancel</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/Scripts/Admin/ComplianceAction.js"></script>
+}
