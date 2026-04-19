@@ -161,8 +161,8 @@
     <Content Include="Content\bootstrap-utilities.min.css" />
     <Content Include="Content\bootstrap-utilities.rtl.css" />
     <Content Include="Content\bootstrap-utilities.rtl.min.css" />
-    <Content Include="Scripts\Admin\ComplianceAction.js" />
-    <Content Include="Scripts\Admin\ComplianceActionCreate.js" />
+    <Content Include="Scripts\Admin\ComplainAction.js" />
+    <Content Include="Scripts\Admin\ComplainActionCreate.js" />
     <Content Include="Scripts\GpsTracking\GpsLiveTrackingWatch.js" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
@@ -234,7 +234,7 @@
     <Content Include="SqlServerTypes\x86\SqlServerSpatial140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Uploads\ComplianceAction\test.txt" />
+    <Content Include="Uploads\ComplainAction\test.txt" />
     <Content Include="Web.config" />
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
@@ -245,7 +245,7 @@
     <Compile Include="Controllers\AdminBonusTypeController.cs" />
     <Compile Include="Controllers\AdminCompaniesController.cs" />
     <Compile Include="Controllers\AdminCompanyRequestsController.cs" />
-    <Compile Include="Controllers\AdminComplianceActionController.cs" />
+    <Compile Include="Controllers\AdminComplainActionController.cs" />
     <Compile Include="Controllers\AdminController.cs" />
     <Compile Include="Controllers\AdminDashboardController.cs" />
     <Compile Include="Controllers\AdminDatabaseAssignmentsController.cs" />
@@ -341,8 +341,8 @@
     <Compile Include="Models\DTOs\Auth\SessionDto.cs" />
     <Compile Include="Models\DTOs\Auth\UserDto.cs" />
     <Compile Include="Models\DTOs\BranchIssue\BranchIssueDtos.cs" />
-    <Compile Include="Models\DTOs\ComplianceAction\ComplianceActionCreateDto.cs" />
-    <Compile Include="Models\DTOs\ComplianceAction\ComplianceActionListDto.cs" />
+    <Compile Include="Models\DTOs\ComplianceAction\ComplainActionCreateDto.cs" />
+    <Compile Include="Models\DTOs\ComplianceAction\ComplainActionListDto.cs" />
     <Compile Include="Models\DTOs\ConcurrentSimulation\ConcurrentSimulationDtos.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\DropdownItemDto.cs" />
     <Compile Include="Models\DTOs\EmployeeInformation\EducationDropdownDto.cs" />
@@ -454,7 +454,7 @@
     <Compile Include="Repositories\Sync\ToolRepository.cs" />
     <Compile Include="Repositories\Sync\CompanyRequestRepository.cs" />
     <Compile Include="Repositories\UnitOfWork.cs" />
-    <Compile Include="Services\AdminComplianceActionService.cs" />
+    <Compile Include="Services\AdminComplainActionService.cs" />
     <Compile Include="Services\AdminEmployeeInformationService.cs" />
     <Compile Include="Services\AdminEmployeeJobCardReportService.cs" />
     <Compile Include="Services\AdminEmployeeStatusReportService.cs" />
@@ -498,7 +498,7 @@
     <Compile Include="Services\Interfaces\Auth\ISessionService.cs" />
     <Compile Include="Services\Interfaces\BranchIssue\IBranchIssueService.cs" />
     <Compile Include="Services\Interfaces\ConcurrentSimulation\IConcurrentSimulationService.cs" />
-    <Compile Include="Services\Interfaces\IAdminComplianceActionService.cs" />
+    <Compile Include="Services\Interfaces\IAdminComplainActionService.cs" />
     <Compile Include="Services\Interfaces\IAdminEmployeeInformationService.cs" />
     <Compile Include="Services\Interfaces\IAdminEmployeeJobCardReportService.cs" />
     <Compile Include="Services\Interfaces\IAdminEmployeeStatusReportService.cs" />
@@ -598,9 +598,9 @@
     <Content Include="Views\AdminBonusType\Create.cshtml" />
     <Content Include="Views\AdminBonusType\Edit.cshtml" />
     <Content Include="Views\AdminBonusType\Details.cshtml" />
-    <Content Include="Views\AdminComplianceAction\Create.cshtml" />
-    <Content Include="Views\AdminComplianceAction\Index.cshtml" />
-    <Content Include="Views\AdminComplianceAction\View.cshtml" />
+    <Content Include="Views\AdminComplainAction\Create.cshtml" />
+    <Content Include="Views\AdminComplainAction\Index.cshtml" />
+    <Content Include="Views\AdminComplainAction\ViewComplain.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

@@ -1,7 +1,7 @@
-﻿@model AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionCreateDto
+﻿@model AttendanceSyncApp.Models.DTOs.ComplainAction.ComplainActionCreateDto
 
 @{
-    ViewBag.Title = "Add Compliance Action Information";
+    ViewBag.Title = "Add Complain Action Information";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
@@ -12,20 +12,22 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-md-8">
-                            <h3>@(Model != null && Model.Id > 0 ? "Edit Compliance Action Information" : "Add Compliance Action Information")</h3>
+                            <h3>@(Model != null && Model.Id > 0 ? "Edit Complain Action Information" : "Add Complain Action Information")</h3>
                             <small>All Red marked are required</small>
                         </div>
                         <div class="col-md-4 text-right">
-                            <a href="@Url.Action("Index", "AdminComplianceAction")" class="btn btn-warning">Back to List</a>
+                            <a href="@Url.Action("Index", "AdminComplainAction")" class="btn btn-warning">Back to List</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    @using (Html.BeginForm("", "", FormMethod.Post, new { id = "complianceActionForm", enctype = "multipart/form-data" }))
+                    @using (Html.BeginForm("", "", FormMethod.Post, new { id = "ComplainActionForm", enctype = "multipart/form-data" }))
                     {
                         @Html.HiddenFor(model => model.Id)
-
+                        @Html.HiddenFor(model => model.ReviewStatus, new { id = "ReviewStatus" })
+                        @Html.HiddenFor(model => model.AttachmentFileName)
+                        @Html.HiddenFor(model => model.AttachmentFilePath)
                         <div class="form-horizontal">
 
                             <div class="form-group row">
@@ -79,9 +81,9 @@
                             </div>
 
                             <div class="form-group row">
-                                <label class="col-md-4 control-label">Compliance Action Type <span style="color:red">*</span></label>
+                                <label class="col-md-4 control-label">Complain Action Type <span style="color:red">*</span></label>
                                 <div class="col-md-6">
-                                    @Html.DropDownListFor(model => model.ComplianceActionType,
+                                    @Html.DropDownListFor(model => model.ComplainActionType,
                                         new List<SelectListItem>
                                         {
                                             new SelectListItem { Text = "-- Select --", Value = "" },
@@ -97,14 +99,14 @@
                                             new SelectListItem { Text = "Counseling", Value = "Counseling" },
                                             new SelectListItem { Text = "Other", Value = "Other" }
                                         },
-                                        new { @class = "form-control", id = "ComplianceActionType" })
+                                        new { @class = "form-control", id = "ComplainActionType" })
                                 </div>
                             </div>
 
                             <div class="form-group row">
-                                <label class="col-md-4 control-label">Compliance Action Details</label>
+                                <label class="col-md-4 control-label">Complain Action Details</label>
                                 <div class="col-md-6">
-                                    @Html.TextAreaFor(model => model.ComplianceActionDetails, new { @class = "form-control", rows = "4" })
+                                    @Html.TextAreaFor(model => model.ComplainActionDetails, new { @class = "form-control", rows = "4" })
                                 </div>
                             </div>
 
@@ -125,6 +127,7 @@
                             <div class="form-group row">
                                 <label class="col-md-4 control-label">Attach File</label>
                                 <div class="col-md-6">
+
                                     @if (Model != null && Model.Id > 0 && !string.IsNullOrWhiteSpace(Model.AttachmentFilePath))
                                     {
                                         <div style="margin-bottom:8px;">
@@ -133,19 +136,20 @@
                                                 @(string.IsNullOrWhiteSpace(Model.AttachmentFileName) ? "View Attachment" : Model.AttachmentFileName)
                                             </a>
                                         </div>
+
+                                        <small class="text-muted" style="display:block; margin-bottom:8px;">
+                                            Previous file is kept. Choose a new file only if you want to replace it.
+                                        </small>
                                     }
 
                                     <input type="file" name="AttachmentFile" id="AttachmentFile" class="form-control" />
-
-                                    @if (Model != null && Model.Id > 0 && !string.IsNullOrWhiteSpace(Model.AttachmentFilePath))
-                                    {
-                                        <small class="text-muted">Previous file is kept. Choose a new file only if you want to replace it.</small>
-                                    }
+                                    <small class="text-muted">Allowed max file size: 2 MB</small>
                                 </div>
                             </div>
+
                             <div class="form-group row" style="margin-top:20px;">
                                 <div class="col-md-offset-4 col-md-6">
-                                    <button type="button" id="btnSaveComplianceAction" class="btn btn-success">Save</button>
+                                    <button type="button" id="btnSaveComplainAction" class="btn btn-success">Save</button>
                                     <button type="reset" class="btn btn-danger">Cancel</button>
                                 </div>
                             </div>
@@ -159,5 +163,5 @@
 </div>
 
 @section Scripts{
-    <script src="~/Scripts/Admin/ComplianceActionCreate.js"></script>
+    <script src="~/Scripts/Admin/ComplainActionCreate.js"></script>
 }

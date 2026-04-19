@@ -1,0 +1,97 @@
+﻿@model List<AttendanceSyncApp.Models.DTOs.ComplainAction.ComplainActionListDto>
+
+@{
+    ViewBag.Title = "Complain List";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    bool isReviewMode = ViewBag.IsReviewMode != null && Convert.ToBoolean(ViewBag.IsReviewMode);
+}
+
+<div class="container-fluid">
+    <div class="card" style="margin-top:20px;">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <h3>@(isReviewMode ? "Employee Complain Review" : "Complain List")</h3>
+                </div>
+                <div class="col-md-4 text-right">
+                    @if (!isReviewMode)
+                    {
+                        <a href="@Url.Action("Create", "AdminComplainAction")" class="btn btn-success">Add New</a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Complain ID</th>
+                            <th>Employee Code</th>
+                            <th>Employee Name</th>
+                            <th>Offence Type</th>
+                            <th>Offence Details</th>
+                            <th>Complain Action Type</th>
+                            <th>Complain Action Details</th>
+                            <th>Status</th>
+                            <th style="width:@(isReviewMode ? "170px" : "150px");">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var item in Model)
+                            {
+                                var currentStatus = string.IsNullOrWhiteSpace(item.ReviewStatus) ? "Pending" : item.ReviewStatus;
+
+                                <tr>
+                                    <td>@item.Id</td>
+                                    <td>@item.EmployeeCode</td>
+                                    <td>@item.EmployeeName</td>
+                                    <td>@item.OffenceType</td>
+                                    <td>@item.OffenceDetails</td>
+                                    <td>@item.ComplainActionType</td>
+                                    <td>@item.ComplainActionDetails</td>
+                                    <td>@currentStatus</td>
+
+                                    <td>
+                                        @if (isReviewMode)
+                                        {
+                                            <a href="@Url.Action("ViewComplain", "AdminComplainAction", new { id = item.Id })"
+                                               class="btn btn-info btn-sm">View</a>
+                                        }
+                                        else
+                                        {
+                                            if (currentStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                            {
+                                                <a href="@Url.Action("Edit", "AdminComplainAction", new { id = item.Id })"
+                                                   class="btn btn-primary btn-sm">Edit</a>
+
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm btnDeleteComplainAction"
+                                                        data-id="@item.Id">
+                                                    Delete
+                                                </button>
+                                            }
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center">No data found.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script src="~/Scripts/Admin/ComplainAction.js"></script>
+}

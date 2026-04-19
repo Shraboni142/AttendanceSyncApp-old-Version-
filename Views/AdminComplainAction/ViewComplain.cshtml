@@ -1,8 +1,10 @@
-﻿@model AttendanceSyncApp.Models.DTOs.ComplianceAction.ComplianceActionCreateDto
+﻿@model AttendanceSyncApp.Models.DTOs.ComplainAction.ComplainActionCreateDto
 
 @{
-    ViewBag.Title = "View Compliance Action Information";
+    ViewBag.Title = "View Complain Action Information";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var currentStatus = string.IsNullOrWhiteSpace(Model.ReviewStatus) ? "Pending" : Model.ReviewStatus;
 }
 
 <div class="container-fluid">
@@ -12,16 +14,18 @@
                 <div class="card-header">
                     <div class="row">
                         <div class="col-md-8">
-                            <h3>View Compliance Action Information</h3>
+                            <h3>View Complain Action Information</h3>
                         </div>
                         <div class="col-md-4 text-right">
-                            <a href="@Url.Action("ReviewList", "AdminComplianceAction")" class="btn btn-warning">Back to List</a>
+                            <a href="@Url.Action("Review", "AdminComplainAction")" class="btn btn-warning">Back to List</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="card-body">
                     <div class="form-horizontal">
+
+                        @Html.HiddenFor(model => model.Id, new { id = "ComplainActionId" })
 
                         <div class="form-group row">
                             <label class="col-md-4 control-label">Employee Name</label>
@@ -52,16 +56,16 @@
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-md-4 control-label">Compliance Action Type</label>
+                            <label class="col-md-4 control-label">Complain Action Type</label>
                             <div class="col-md-6">
-                                <input type="text" class="form-control" value="@Model.ComplianceActionType" readonly />
+                                <input type="text" class="form-control" value="@Model.ComplainActionType" readonly />
                             </div>
                         </div>
 
                         <div class="form-group row">
-                            <label class="col-md-4 control-label">Compliance Action Details</label>
+                            <label class="col-md-4 control-label">Complain Action Details</label>
                             <div class="col-md-6">
-                                <textarea class="form-control" rows="4" readonly>@Model.ComplianceActionDetails</textarea>
+                                <textarea class="form-control" rows="4" readonly>@Model.ComplainActionDetails</textarea>
                             </div>
                         </div>
 
@@ -78,7 +82,6 @@
                                 <input type="text" class="form-control" value="@(Model.EarlyWithdrawalDate.HasValue ? Model.EarlyWithdrawalDate.Value.ToString("dd/MM/yyyy") : "")" readonly />
                             </div>
                         </div>
-
                         <div class="form-group row">
                             <label class="col-md-4 control-label">Attachment</label>
                             <div class="col-md-6">
@@ -95,9 +98,43 @@
                             </div>
                         </div>
 
+                        <hr />
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label"><strong>Current Status</strong></label>
+                            <div class="col-md-6">
+                                <input type="text" id="CurrentReviewStatus" class="form-control" value="@currentStatus" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-md-4 control-label"><strong>Set Review Status</strong></label>
+                            <div class="col-md-6">
+                                <select id="ReviewStatusDropdown" class="form-control">
+                                    <option value="">-- Select Status --</option>
+                                    <option value="InProgress" @(currentStatus == "InProgress" ? "selected='selected'" : "")>InProgress</option>
+                                    <option value="Resolve" @(currentStatus == "Resolve" ? "selected='selected'" : "")>Resolve</option>
+                                    <option value="Reject" @(currentStatus == "Reject" ? "selected='selected'" : "")>Reject</option>
+                                </select>
+                                <small class="text-muted">Default status is Pending until HR selects one.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row" style="margin-top:15px;">
+                            <div class="col-md-offset-4 col-md-6">
+                                <button type="button" id="btnUpdateReviewStatusFromView" class="btn btn-success">
+                                    Update Status
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts{
+    <script src="~/Scripts/Admin/ComplainAction.js"></script>
+}

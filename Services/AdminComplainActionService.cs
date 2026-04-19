@@ -1,35 +1,37 @@
-﻿using AttendanceSyncApp.Models.DTOs.ComplianceAction;
+﻿using AttendanceSyncApp.Models.DTOs.ComplainAction;
 using AttendanceSyncApp.Services.Interfaces;
+using Org.BouncyCastle.Asn1.X509;
+using SkiaSharp;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Data;
 using System.Data.SqlClient;
 
 namespace AttendanceSyncApp.Services
 {
-    public class AdminComplianceActionService : IAdminComplianceActionService
+    public class AdminComplainActionService : IAdminComplainActionService
     {
         private readonly string _connectionString;
 
-        public AdminComplianceActionService()
+        public AdminComplainActionService()
         {
             _connectionString = ConfigurationManager.ConnectionStrings["AttandanceSyncConnection"].ConnectionString;
         }
 
-        public bool SaveComplianceAction(ComplianceActionCreateDto dto)
+        public bool SaveComplainAction(ComplainActionCreateDto dto)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 string query = @"
-INSERT INTO dbo.EmployeeComplianceActions
+INSERT INTO dbo.EmployeeComplainActions
 (
     EmployeeCode,
     EmployeeName,
     OffenceType,
     OffenceDetails,
-    ComplianceActionType,
-    ComplianceActionDetails,
+    ComplainActionType,
+    ComplainActionDetails,
     DateOfNotice,
     EarlyWithdrawalDate,
     AttachmentFileName,
@@ -45,8 +47,8 @@ VALUES
     @EmployeeName,
     @OffenceType,
     @OffenceDetails,
-    @ComplianceActionType,
-    @ComplianceActionDetails,
+    @ComplainActionType,
+    @ComplainActionDetails,
     @DateOfNotice,
     @EarlyWithdrawalDate,
     @AttachmentFileName,
@@ -63,13 +65,14 @@ VALUES
                     cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@OffenceType", dto.OffenceType ?? "");
                     cmd.Parameters.AddWithValue("@OffenceDetails", (object)dto.OffenceDetails ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ComplianceActionType", dto.ComplianceActionType ?? "");
-                    cmd.Parameters.AddWithValue("@ComplianceActionDetails", (object)dto.ComplianceActionDetails ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ComplainActionType", dto.ComplainActionType ?? "");
+                    cmd.Parameters.AddWithValue("@ComplainActionDetails", (object)dto.ComplainActionDetails ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DateOfNotice", dto.DateOfNotice);
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFilePath", (object)dto.AttachmentFilePath ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ReviewStatus", (object)dto.ReviewStatus ?? "InProgress");
+                    cmd.Parameters.AddWithValue("@ReviewStatus",
+    string.IsNullOrWhiteSpace(dto.ReviewStatus) ? "Pending" : dto.ReviewStatus);
                     cmd.Parameters.AddWithValue("@CreatedBy", (object)dto.CreatedBy ?? DBNull.Value);
 
                     conn.Open();
@@ -79,23 +82,38 @@ VALUES
             }
         }
 
-        public List<ComplianceActionListDto> GetAllComplianceActions()
+        public List<ComplainActionListDto> GetAllComplainActions()
         {
-            List<ComplianceActionListDto> list = new List<ComplianceActionListDto>();
+            List<ComplainActionListDto> list = new List<ComplainActionListDto>();
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string query = @"
-SELECT 
+string query = @"
+; WITH LatestEmployeeComplain AS
+(
+    SELECT
+        Id,
+        EmployeeCode,
+        EmployeeName,
+        OffenceType,
+        OffenceDetails,
+        ComplainActionType,
+        ComplainActionDetails,
+        ReviewStatus,
+        ROW_NUMBER() OVER(PARTITION BY EmployeeCode ORDER BY Id DESC) AS RowNum
+    FROM dbo.EmployeeComplainActions
+)
+SELECT
     Id,
     EmployeeCode,
     EmployeeName,
     OffenceType,
     OffenceDetails,
-    ComplianceActionType,
-    ComplianceActionDetails,
+    ComplainActionType,
+    ComplainActionDetails,
     ReviewStatus
-FROM dbo.EmployeeComplianceActions
+FROM LatestEmployeeComplain
+WHERE RowNum = 1
 ORDER BY Id DESC";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -105,15 +123,15 @@ ORDER BY Id DESC";
                     {
                         while (reader.Read())
                         {
-                            list.Add(new ComplianceActionListDto
+                            list.Add(new ComplainActionListDto
                             {
                                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
                                 EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
                                 EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
                                 OffenceType = reader["OffenceType"] == DBNull.Value ? "" : reader["OffenceType"].ToString(),
                                 OffenceDetails = reader["OffenceDetails"] == DBNull.Value ? "" : reader["OffenceDetails"].ToString(),
-                                ComplianceActionType = reader["ComplianceActionType"] == DBNull.Value ? "" : reader["ComplianceActionType"].ToString(),
-                                ComplianceActionDetails = reader["ComplianceActionDetails"] == DBNull.Value ? "" : reader["ComplianceActionDetails"].ToString(),
+                                ComplainActionType = reader["ComplainActionType"] == DBNull.Value ? "" : reader["ComplainActionType"].ToString(),
+                                ComplainActionDetails = reader["ComplainActionDetails"] == DBNull.Value ? "" : reader["ComplainActionDetails"].ToString(),
                                 ReviewStatus = reader["ReviewStatus"] == DBNull.Value ? "" : reader["ReviewStatus"].ToString()
                             });
                         }
@@ -124,9 +142,9 @@ ORDER BY Id DESC";
             return list;
         }
 
-        public ComplianceActionCreateDto GetComplianceActionById(int id)
+        public ComplainActionCreateDto GetComplainActionById(int id)
         {
-            ComplianceActionCreateDto dto = null;
+            ComplainActionCreateDto dto = null;
 
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
@@ -137,14 +155,14 @@ SELECT
     EmployeeName,
     OffenceType,
     OffenceDetails,
-    ComplianceActionType,
-    ComplianceActionDetails,
+    ComplainActionType,
+    ComplainActionDetails,
     DateOfNotice,
     EarlyWithdrawalDate,
     AttachmentFileName,
     AttachmentFilePath,
     ReviewStatus
-FROM dbo.EmployeeComplianceActions
+FROM dbo.EmployeeComplainActions
 WHERE Id = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
@@ -156,15 +174,15 @@ WHERE Id = @Id";
                     {
                         if (reader.Read())
                         {
-                            dto = new ComplianceActionCreateDto
+                            dto = new ComplainActionCreateDto
                             {
                                 Id = reader["Id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Id"]),
                                 EmployeeCode = reader["EmployeeCode"] == DBNull.Value ? "" : reader["EmployeeCode"].ToString(),
                                 EmployeeName = reader["EmployeeName"] == DBNull.Value ? "" : reader["EmployeeName"].ToString(),
                                 OffenceType = reader["OffenceType"] == DBNull.Value ? "" : reader["OffenceType"].ToString(),
                                 OffenceDetails = reader["OffenceDetails"] == DBNull.Value ? "" : reader["OffenceDetails"].ToString(),
-                                ComplianceActionType = reader["ComplianceActionType"] == DBNull.Value ? "" : reader["ComplianceActionType"].ToString(),
-                                ComplianceActionDetails = reader["ComplianceActionDetails"] == DBNull.Value ? "" : reader["ComplianceActionDetails"].ToString(),
+                                ComplainActionType = reader["ComplainActionType"] == DBNull.Value ? "" : reader["ComplainActionType"].ToString(),
+                                ComplainActionDetails = reader["ComplainActionDetails"] == DBNull.Value ? "" : reader["ComplainActionDetails"].ToString(),
                                 DateOfNotice = reader["DateOfNotice"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["DateOfNotice"]),
                                 EarlyWithdrawalDate = reader["EarlyWithdrawalDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["EarlyWithdrawalDate"]),
                                 AttachmentFileName = reader["AttachmentFileName"] == DBNull.Value ? "" : reader["AttachmentFileName"].ToString(),
@@ -179,19 +197,47 @@ WHERE Id = @Id";
             return dto;
         }
 
-        public bool UpdateComplianceAction(ComplianceActionCreateDto dto)
+        public bool UpdateComplainAction(ComplainActionCreateDto dto)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
+                if (string.IsNullOrWhiteSpace(dto.AttachmentFileName) || string.IsNullOrWhiteSpace(dto.AttachmentFilePath))
+                {
+                    string previousQuery = "SELECT AttachmentFileName, AttachmentFilePath FROM dbo.EmployeeComplainActions WHERE Id = @Id";
+
+                    using (SqlCommand previousCmd = new SqlCommand(previousQuery, conn))
+                    {
+                        previousCmd.Parameters.AddWithValue("@Id", dto.Id);
+
+                        conn.Open();
+                        using (SqlDataReader reader = previousCmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                if (string.IsNullOrWhiteSpace(dto.AttachmentFileName))
+                                {
+                                    dto.AttachmentFileName = reader["AttachmentFileName"] == DBNull.Value ? "" : reader["AttachmentFileName"].ToString();
+                                }
+
+                                if (string.IsNullOrWhiteSpace(dto.AttachmentFilePath))
+                                {
+                                    dto.AttachmentFilePath = reader["AttachmentFilePath"] == DBNull.Value ? "" : reader["AttachmentFilePath"].ToString();
+                                }
+                            }
+                        }
+                        conn.Close();
+                    }
+                }
+
                 string query = @"
-UPDATE dbo.EmployeeComplianceActions
+UPDATE dbo.EmployeeComplainActions
 SET
     EmployeeCode = @EmployeeCode,
     EmployeeName = @EmployeeName,
     OffenceType = @OffenceType,
     OffenceDetails = @OffenceDetails,
-    ComplianceActionType = @ComplianceActionType,
-    ComplianceActionDetails = @ComplianceActionDetails,
+    ComplainActionType = @ComplainActionType,
+    ComplainActionDetails = @ComplainActionDetails,
     DateOfNotice = @DateOfNotice,
     EarlyWithdrawalDate = @EarlyWithdrawalDate,
     AttachmentFileName = @AttachmentFileName,
@@ -208,13 +254,14 @@ WHERE Id = @Id";
                     cmd.Parameters.AddWithValue("@EmployeeName", (object)dto.EmployeeName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@OffenceType", dto.OffenceType ?? "");
                     cmd.Parameters.AddWithValue("@OffenceDetails", (object)dto.OffenceDetails ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ComplianceActionType", dto.ComplianceActionType ?? "");
-                    cmd.Parameters.AddWithValue("@ComplianceActionDetails", (object)dto.ComplianceActionDetails ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@ComplainActionType", dto.ComplainActionType ?? "");
+                    cmd.Parameters.AddWithValue("@ComplainActionDetails", (object)dto.ComplainActionDetails ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@DateOfNotice", dto.DateOfNotice);
                     cmd.Parameters.AddWithValue("@EarlyWithdrawalDate", (object)dto.EarlyWithdrawalDate ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFileName", (object)dto.AttachmentFileName ?? DBNull.Value);
                     cmd.Parameters.AddWithValue("@AttachmentFilePath", (object)dto.AttachmentFilePath ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@ReviewStatus", (object)dto.ReviewStatus ?? "InProgress");
+                    cmd.Parameters.AddWithValue("@ReviewStatus",
+                        string.IsNullOrWhiteSpace(dto.ReviewStatus) ? "Pending" : dto.ReviewStatus);
                     cmd.Parameters.AddWithValue("@UpdatedBy", (object)dto.CreatedBy ?? DBNull.Value);
 
                     conn.Open();
@@ -224,11 +271,11 @@ WHERE Id = @Id";
             }
         }
 
-        public bool DeleteComplianceAction(int id)
+        public bool DeleteComplainAction(int id)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
-                string query = "DELETE FROM dbo.EmployeeComplianceActions WHERE Id = @Id";
+                string query = "DELETE FROM dbo.EmployeeComplainActions WHERE Id = @Id";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -241,12 +288,12 @@ WHERE Id = @Id";
             }
         }
 
-        public bool UpdateComplianceReviewStatus(int id, string reviewStatus)
+        public bool UpdateComplainReviewStatus(int id, string reviewStatus)
         {
             using (SqlConnection conn = new SqlConnection(_connectionString))
             {
                 string query = @"
-UPDATE dbo.EmployeeComplianceActions
+UPDATE dbo.EmployeeComplainActions
 SET
     ReviewStatus = @ReviewStatus,
     UpdatedAt = GETDATE()
